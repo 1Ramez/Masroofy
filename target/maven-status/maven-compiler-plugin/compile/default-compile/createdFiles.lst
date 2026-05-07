@@ -1,4 +1,4 @@
-masroofy\model\BudgetCycle.class
 masroofy\view\InitScene.class
-masroofy\controller\CycleController.class
+masroofy\model\BudgetCycle.class
 masroofy\data\Database.class
+masroofy\controller\CycleController.class
