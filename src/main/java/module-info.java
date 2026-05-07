@@ -12,8 +12,8 @@ module masroofy {
     opens masroofy.data to javafx.base;
 
     exports masroofy;
-    exports masroofy.view;
-    exports masroofy.controller;
+        exports masroofy.view;
+        exports masroofy.controller;
     exports masroofy.model;
     exports masroofy.data;
 }
