@@ -15,15 +15,11 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import masroofy.App;
 import masroofy.model.BudgetCycle;
-
 /**
- * SceneBase
- * Shared layout: sidebar + navbar + content area
- * All scenes extend this to get the same shell.
+ * Base class for Masroofy scenes that share a common shell (navbar + sidebar + content).
  */
-public abstract class SceneBase {
 
-    // ── Colors ────────────────────────────────────────────────────────────────
+public abstract class SceneBase {
     protected static final String BG_DEEP    = "#0D1117";
     protected static final String BG_CARD    = "#161B22";
     protected static final String BG_SIDEBAR = "#0D1117";
@@ -38,17 +34,21 @@ public abstract class SceneBase {
 
     protected final Stage       stage;
     protected final BudgetCycle cycle;
-
-    // Current user name — shared across scenes
     protected static String currentUser = "Student";
-
-    public SceneBase(Stage stage, BudgetCycle cycle) {
+/**
+ * Creates a scene base for the given stage and cycle.
+ *
+ * @param stage application stage
+ * @param cycle active cycle (may be {@code null} for setup)
+ */
+public SceneBase(Stage stage, BudgetCycle cycle) {
         this.stage = stage;
         this.cycle = cycle;
     }
-
-    // ── Build the full shell and inject content ───────────────────────────────
-    public void show() {
+/**
+ * Builds the shared shell and injects the subclass content.
+ */
+public void show() {
         BorderPane shell = new BorderPane();
         shell.setStyle("-fx-background-color: " + BG_DEEP + ";");
 
@@ -58,9 +58,12 @@ public abstract class SceneBase {
 
         App.setContent(shell);
     }
-
-    // ── Navbar ────────────────────────────────────────────────────────────────
-    private HBox buildNavbar() {
+/**
+ * Builds the top navigation bar.
+ *
+ * @return navbar node
+ */
+private HBox buildNavbar() {
         HBox nav = new HBox();
         nav.setPadding(new Insets(0, 20, 0, 20));
         nav.setAlignment(Pos.CENTER_LEFT);
@@ -70,8 +73,6 @@ public abstract class SceneBase {
             "-fx-border-color: " + BORDER + ";" +
             "-fx-border-width: 0 0 1 0;"
         );
-
-        // Logo
         Label logo = new Label("Masroofy");
         logo.setFont(Font.font("Segoe UI", javafx.scene.text.FontWeight.BOLD, 18));
         logo.setTextFill(Color.web(TEXT_WHITE));
@@ -82,8 +83,6 @@ public abstract class SceneBase {
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
-
-        // User initial bubble
         Label userBubble = new Label(currentUser.substring(0, Math.min(2, currentUser.length())));
         userBubble.setFont(Font.font("Segoe UI", 12));
         userBubble.setTextFill(Color.web(TEXT_WHITE));
@@ -92,8 +91,6 @@ public abstract class SceneBase {
             "-fx-background-radius: 50;" +
             "-fx-padding: 4 8;"
         );
-
-        // Sign out
         Button signOut = new Button("Sign Out");
         signOut.setFont(Font.font("Segoe UI", 12));
         signOut.setStyle(
@@ -111,8 +108,6 @@ public abstract class SceneBase {
             currentUser = "Student";
             new InitScene(stage).show();
         });
-
-        // DB status badge
         Label dbBadge = new Label("Local mode · SQLite");
         dbBadge.setFont(Font.font("Segoe UI", 11));
         dbBadge.setTextFill(Color.web(TEXT_WHITE));
@@ -128,9 +123,12 @@ public abstract class SceneBase {
         nav.getChildren().addAll(logo, tagline, spacer, rightSide);
         return nav;
     }
-
-    // ── Sidebar ───────────────────────────────────────────────────────────────
-    private VBox buildSidebar() {
+/**
+ * Builds the left sidebar navigation.
+ *
+ * @return sidebar node
+ */
+private VBox buildSidebar() {
         VBox sidebar = new VBox(2);
         sidebar.setPrefWidth(175);
         sidebar.setPadding(new Insets(16, 8, 16, 8));
@@ -148,19 +146,13 @@ public abstract class SceneBase {
             btn.setOnAction(e -> navigateTo(label));
             sidebar.getChildren().add(btn);
         }
-
-        // Spacer
         Region sp = new Region();
         VBox.setVgrow(sp, Priority.ALWAYS);
         sidebar.getChildren().add(sp);
-
-        // Separator
         Pane sep = new Pane();
         sep.setPrefHeight(1);
         sep.setStyle("-fx-background-color: " + BORDER + ";");
         sidebar.getChildren().add(sep);
-
-        // Cycle info at bottom
         if (cycle != null) {
             VBox cycleInfo = new VBox(2);
             cycleInfo.setPadding(new Insets(10, 8, 4, 8));
@@ -195,9 +187,12 @@ public abstract class SceneBase {
 
         return sidebar;
     }
-
-    // ── Navigate from sidebar ──────────────────────────────────────────────────
-    private void navigateTo(String label) {
+/**
+ * Navigates to the scene matching the given sidebar label.
+ *
+ * @param label sidebar label
+ */
+private void navigateTo(String label) {
         switch (label) {
             case "Setup"     -> new InitScene(stage).show();
             case "Dashboard" -> new DashboardScene(stage, cycle).show();
@@ -207,9 +202,14 @@ public abstract class SceneBase {
             case "Settings"  -> new SettingsScene(stage, cycle).show();
         }
     }
-
-    // ── Sidebar button ────────────────────────────────────────────────────────
-    private Button sidebarButton(String text, boolean active) {
+/**
+ * Creates a sidebar navigation button.
+ *
+ * @param text button text
+ * @param active whether the button represents the current page
+ * @return button instance
+ */
+private Button sidebarButton(String text, boolean active) {
         Button b = new Button(text);
         b.setMaxWidth(Double.MAX_VALUE);
         b.setAlignment(Pos.CENTER_LEFT);
@@ -249,9 +249,13 @@ public abstract class SceneBase {
         }
         return b;
     }
-
-    // ── Card helper ───────────────────────────────────────────────────────────
-    protected VBox card(String title) {
+/**
+ * Creates a styled card container with a title label.
+ *
+ * @param title card title
+ * @return card container
+ */
+protected VBox card(String title) {
         VBox c = new VBox(14);
         c.setPadding(new Insets(20));
         c.setStyle(
@@ -269,8 +273,6 @@ public abstract class SceneBase {
         }
         return c;
     }
-
-    // ── Stat box helper ───────────────────────────────────────────────────────
     protected VBox statBox(String label, String value) {
         VBox box = new VBox(4);
         box.setPadding(new Insets(16));
@@ -290,8 +292,6 @@ public abstract class SceneBase {
         box.getChildren().addAll(lbl, val);
         return box;
     }
-
-    // ── Input field helper ────────────────────────────────────────────────────
     protected javafx.scene.control.TextField inputField(String prompt, double width) {
         javafx.scene.control.TextField tf = new javafx.scene.control.TextField();
         tf.setPromptText(prompt);
@@ -310,9 +310,14 @@ public abstract class SceneBase {
         );
         return tf;
     }
-
-    // ── Primary button helper ─────────────────────────────────────────────────
-    protected Button primaryButton(String text, double width) {
+/**
+ * Creates a primary action button.
+ *
+ * @param text button text
+ * @param width preferred width
+ * @return button instance
+ */
+protected Button primaryButton(String text, double width) {
         Button b = new Button(text);
         b.setPrefWidth(width);
         b.setPrefHeight(38);
@@ -325,9 +330,14 @@ public abstract class SceneBase {
         );
         return b;
     }
-
-    // ── Secondary button helper ───────────────────────────────────────────────
-    protected Button secondaryButton(String text, double width) {
+/**
+ * Creates a secondary action button.
+ *
+ * @param text button text
+ * @param width preferred width
+ * @return button instance
+ */
+protected Button secondaryButton(String text, double width) {
         Button b = new Button(text);
         b.setPrefWidth(width);
         b.setPrefHeight(38);
@@ -343,9 +353,14 @@ public abstract class SceneBase {
         );
         return b;
     }
-
-    // ── Danger button helper ──────────────────────────────────────────────────
-    protected Button dangerButton(String text, double width) {
+/**
+ * Creates a destructive action button.
+ *
+ * @param text button text
+ * @param width preferred width
+ * @return button instance
+ */
+protected Button dangerButton(String text, double width) {
         Button b = new Button(text);
         b.setPrefWidth(width);
         b.setPrefHeight(38);
@@ -358,34 +373,53 @@ public abstract class SceneBase {
         );
         return b;
     }
-
-    // ── Row label helper ──────────────────────────────────────────────────────
-    protected Label rowLabel(String text) {
+/**
+ * Creates a label used for key/value rows.
+ *
+ * @param text label text
+ * @return label instance
+ */
+protected Label rowLabel(String text) {
         Label l = new Label(text);
         l.setFont(Font.font("Segoe UI", 13));
         l.setTextFill(Color.web(TEXT_GRAY));
         l.setMinWidth(90);
         return l;
     }
-
-    // ── Page title ────────────────────────────────────────────────────────────
-    protected Label pageTitle(String text) {
+/**
+ * Creates a styled page title label.
+ *
+ * @param text title text
+ * @return label instance
+ */
+protected Label pageTitle(String text) {
         Label l = new Label(text);
         l.setFont(Font.font("Segoe UI", javafx.scene.text.FontWeight.BOLD, 22));
         l.setTextFill(Color.web(TEXT_WHITE));
         return l;
     }
-
-    // ── Error label ───────────────────────────────────────────────────────────
-    protected Label errorLabel() {
+/**
+ * Creates a label styled for validation and error messages.
+ *
+ * @return label instance
+ */
+protected Label errorLabel() {
         Label l = new Label("");
         l.setFont(Font.font("Segoe UI", 12));
         l.setTextFill(Color.web(DANGER));
         l.setWrapText(true);
         return l;
     }
-
-    // ── Subclasses implement these ────────────────────────────────────────────
-    protected abstract javafx.scene.Node buildContent();
-    protected abstract String getActiveNav();
+/**
+ * Builds the scene-specific content injected into the shared shell.
+ *
+ * @return content node
+ */
+protected abstract javafx.scene.Node buildContent();
+/**
+ * Returns the sidebar label that should be highlighted as active.
+ *
+ * @return active sidebar label
+ */
+protected abstract String getActiveNav();
 }

@@ -5,57 +5,89 @@ import java.time.LocalDate;
 import masroofy.data.DAOLayer;
 import masroofy.model.BudgetCycle;
 
+/**
+ * Controller responsible for creating and managing budget cycles.
+ */
 public class CycleController {
 
     private final DAOLayer daoLayer;
     private String validationError;
 
+    /**
+     * Creates a controller backed by the DAO layer.
+     */
     public CycleController(){
         this.daoLayer = new DAOLayer();
     }
 
-    //Used in SD-1
+    /**
+     * Creates and persists a new budget cycle after validating input.
+     *
+     * @param amount total cycle budget amount
+     * @param startDate start date (inclusive)
+     * @param endDate end date (inclusive)
+     * @return created cycle, or {@code null} when validation fails or persistence fails
+     */
     public BudgetCycle createCycle(float amount, LocalDate startDate, LocalDate endDate) {
-
         if (!validateInput(amount, startDate, endDate)) return null;
 
         BudgetCycle cycle = new BudgetCycle(amount, startDate, endDate);
-
         cycle.calculateWeeklyLimit();
 
-        // SD-1 Step 4: INSERT INTO Cycles — returns cycleId (Step 5)
         int cycleId = daoLayer.insertCycle(cycle);
         if (cycleId <= 0) {
             validationError = "Could not save budget cycle.";
             return null;
         }
 
-        // SD-1 Step 6: generateReport() : void
         generateReport(cycle);
-
-        // SD-1 Step 7: signal UI to navigate to Dashboard
         return cycle;
     }
 
-    // Called on app launch — if active cycle exists, skip InitSetupPage
+    /**
+     * Returns the active cycle if one exists.
+     *
+     * @return active cycle, or {@code null}
+     */
     public BudgetCycle checkActiveCycle() {
         return daoLayer.findActiveCycle();
     }
 
-    // Used in Settings: reset/delete the current cycle
+    /**
+     * Resets the specified cycle and deletes related data.
+     *
+     * @param cycleId cycle id
+     * @return {@code true} if reset succeeds
+     */
     public boolean resetCycle(int cycleId) {
         return daoLayer.resetCycle(cycleId);
     }
 
+    /**
+     * Returns the last validation error message, if any.
+     *
+     * @return validation error (may be {@code null})
+     */
     public String getValidationError() { return validationError; }
 
-    // SD-1 Step 6: generateReport() — signals Dashboard to display data
+    /**
+     * Emits a creation report message for debugging/logging.
+     *
+     * @param cycle created cycle
+     */
     private void generateReport(BudgetCycle cycle) {
         System.out.println("[CycleController] Cycle created. ID=" + cycle.getBudgetCycleId()
             + " DailyLimit=" + cycle.getSafeDailyLimit());
     }
 
-    // SD-1 alt: validation — amount > 0, dates not null, end > start
+    /**
+     * Validates cycle creation inputs and sets {@link #validationError} on failure.
+     *
+     * @param amount total budget amount
+     * @param start start date
+     * @param end end date
+     * @return {@code true} if inputs are valid
+     */
     private boolean validateInput(float amount, LocalDate start, LocalDate end) {
         validationError = null;
         if (amount <= 0) {
@@ -73,3 +105,4 @@ public class CycleController {
         return true;
     }
 }
+

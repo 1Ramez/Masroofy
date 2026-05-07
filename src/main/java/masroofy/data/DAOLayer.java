@@ -14,22 +14,39 @@ import masroofy.model.BudgetCycle;
 import masroofy.model.Category;
 import masroofy.model.Expense;
 
-/*
- SD-5  : getSnapshotData()
- SD-7  : persistExpense(), restoreFromSettings(), updateCycleRemainingBalance()
+/**
+ * Provides database CRUD operations for Masroofy's SQLite schema.
+ *
+ * <p>This class centralizes SQL access for cycles, expenses, categories, alerts, daily snapshots, and
+ * settings.</p>
  */
-
 public class DAOLayer {
 
     private final Connection connection;
 
+    /**
+     * Daily snapshot record used to persist rollover results.
+     *
+     * @param checkDate the date the snapshot applies to
+     * @param prevSpent the total spent on the previous day
+     * @param deficit the difference between the safe daily limit and {@code prevSpent}
+     * @param isNegative whether {@code deficit} is negative (overspent)
+     */
     public record Snapshot(LocalDate checkDate, float prevSpent, float deficit, boolean isNegative) { }
 
+    /**
+     * Creates a DAO backed by the application's singleton database connection.
+     */
     public DAOLayer() {
         this.connection = Database.getInstance().getConnection();
     }
 
-    //Used in SD-1
+    /**
+     * Inserts a new budget cycle and returns its generated database id.
+     *
+     * @param cycle the cycle to insert
+     * @return the generated id, or {@code -1} on failure
+     */
     public int insertCycle(BudgetCycle cycle){
         String sql = """
             INSERT INTO Cycles
@@ -55,7 +72,11 @@ public class DAOLayer {
         return -1;
     }
 
-    //Used in SD-1 & SD-3 & SD-5 & SD-7
+    /**
+     * Returns the currently active cycle, if any.
+     *
+     * @return the active {@link BudgetCycle}, or {@code null} when none exists
+     */
     public BudgetCycle findActiveCycle() {
         String sql = "SELECT * FROM Cycles WHERE isActive = 1 LIMIT 1";
         try (PreparedStatement stmt = connection.prepareStatement(sql);
@@ -67,7 +88,13 @@ public class DAOLayer {
         return null;
     }
 
-    //Used in SD-3
+    /**
+     * Updates the persisted safe daily limit and remaining balance for a cycle.
+     *
+     * @param cycleId the cycle id
+     * @param newLimit the new safe daily limit
+     * @param newBalance the new remaining balance
+     */
     public void updateCycleSafeDailyLimit(int cycleId, float newLimit, float newBalance){
         String sql = "UPDATE Cycles SET safeDailyLimit=?, remainingBalance=? WHERE budgetCycleId=?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)){
@@ -80,7 +107,11 @@ public class DAOLayer {
         }
     }
 
-    //Used in SD-2
+    /**
+     * Loads all categories.
+     *
+     * @return list of categories (possibly empty)
+     */
     public List<Category> getCategoryList(){
         List<Category> list = new ArrayList<>();
         String sql = "SELECT * FROM Categories";
@@ -100,7 +131,12 @@ public class DAOLayer {
         return list;
     }
 
-    //Used in SD-2 & SD-7
+    /**
+     * Inserts a new expense transaction and returns its generated id.
+     *
+     * @param expense the expense to insert
+     * @return the generated id, or {@code -1} on failure
+     */
     public int insertExpense(Expense expense){
         String sql = """
             INSERT INTO Transactions (budgetCycleId, amount, categoryId, date, note)
@@ -125,7 +161,12 @@ public class DAOLayer {
         return -1;
     }
 
-    //Used in SD-4
+    /**
+     * Loads all expenses for a given cycle ordered by date descending.
+     *
+     * @param cycleId the cycle id
+     * @return list of expenses (possibly empty)
+     */
     public List<Expense> getAllExpenses(int cycleId){
         List<Expense> list = new ArrayList<>();
         String sql = "SELECT * FROM Transactions WHERE budgetCycleId=? ORDER BY date DESC";
@@ -139,6 +180,13 @@ public class DAOLayer {
         return list;
     }
 
+    /**
+     * Returns the total amount spent on a specific date within a cycle.
+     *
+     * @param cycleId the cycle id
+     * @param date the date to sum
+     * @return total spent for that day
+     */
     public float getTotalSpentOnDate(int cycleId, LocalDate date) {
         String sql = "SELECT COALESCE(SUM(amount), 0) FROM Transactions WHERE budgetCycleId=? AND date=?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -152,7 +200,12 @@ public class DAOLayer {
         return 0f;
     }
 
-    //Used in SD-4
+    /**
+     * Returns aggregated expense totals by category for a cycle.
+     *
+     * @param cycleId the cycle id
+     * @return list of rows where each row is {@code [String categoryName, Float total]}
+     */
     public List<Object[]> getExpensesByCategory(int cycleId){
         List<Object[]> result = new ArrayList<>();
         String sql = """
@@ -174,7 +227,12 @@ public class DAOLayer {
         return result;
     }
 
-    //Used in SD-5
+    /**
+     * Returns the latest daily snapshot for a cycle.
+     *
+     * @param cycleId the cycle id
+     * @return latest snapshot, or {@code null} if none exist
+     */
     public Snapshot getLatestSnapshot(int cycleId){
         String sql = """
             SELECT checkDate, prevSpent, deficit, isNegative
@@ -199,7 +257,14 @@ public class DAOLayer {
         return null;
     }
 
-    //Used in SD-5
+    /**
+     * Inserts a daily snapshot row for today's date.
+     *
+     * @param cycleId the cycle id
+     * @param prevSpent total spent yesterday
+     * @param deficit difference between safe daily limit and yesterday's spend
+     * @param isNegative whether the user overspent (negative deficit)
+     */
     public void insertDailySnapshot(int cycleId, float prevSpent, float deficit, boolean isNegative) {
         String sql = """
             INSERT INTO DailySnapshots (cycleId, checkDate, prevSpent, deficit, isNegative)
@@ -217,7 +282,13 @@ public class DAOLayer {
         }
     }
 
-    //Used in SD-5 & SD-7
+    /**
+     * Updates remaining balance and safe daily limit for a cycle.
+     *
+     * @param cycleId the cycle id
+     * @param newBalance the updated remaining balance
+     * @param newDailyLimit the updated safe daily limit
+     */
     public void updateCycleBalance(int cycleId, float newBalance, float newDailyLimit){
         String sql = "UPDATE Cycles SET remainingBalance=?, safeDailyLimit=? WHERE budgetCycleId=?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)){
@@ -230,6 +301,12 @@ public class DAOLayer {
         }
     }
 
+    /**
+     * Updates only the remaining balance for a cycle.
+     *
+     * @param cycleId the cycle id
+     * @param newBalance the updated remaining balance
+     */
     public void updateCycleRemainingBalance(int cycleId, float newBalance) {
         String sql = "UPDATE Cycles SET remainingBalance=? WHERE budgetCycleId=?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -241,7 +318,13 @@ public class DAOLayer {
         }
     }
 
-    //Used in SD-6
+    /**
+     * Inserts an alert log entry.
+     *
+     * @param cycleId the cycle id
+     * @param message the alert message
+     * @param type the alert type key used for de-duplication
+     */
     public void insertAlertLog(int cycleId, String message, String type){
         String sql = """
             INSERT INTO AlertLog (cycleId, message, type, isRead, createdAt)
@@ -258,7 +341,13 @@ public class DAOLayer {
         }
     }
 
-    //Used in SD-6
+    /**
+     * Returns whether an alert of the specified type has already been fired for the cycle.
+     *
+     * @param cycleId the cycle id
+     * @param type the alert type key
+     * @return {@code true} if at least one matching log row exists
+     */
     public boolean wasAlertFired(int cycleId, String type) {
         String sql = "SELECT COUNT(*) FROM AlertLog WHERE cycleId=? AND type=?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -272,7 +361,12 @@ public class DAOLayer {
         return false;
     }
 
-    // ── SD-7: SELECT * FROM Settings (restore on crash) ──────────────────────
+    /**
+     * Loads a persisted application setting.
+     *
+     * @param key the setting key
+     * @return the stored value, or {@code null} if missing
+     */
     public String getSetting(String key) {
         String sql = "SELECT value FROM Settings WHERE key=?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -285,7 +379,11 @@ public class DAOLayer {
         return null;
     }
 
-    // ── US11: delete all expenses for a cycle ────────────────────────────────
+    /**
+     * Deletes all expenses for a cycle.
+     *
+     * @param cycleId the cycle id
+     */
     public void deleteExpensesByCycle(int cycleId) {
         String sql = "DELETE FROM Transactions WHERE budgetCycleId=?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -296,7 +394,11 @@ public class DAOLayer {
         }
     }
 
-    // ── US11: delete a cycle ──────────────────────────────────────────────────
+    /**
+     * Deletes the cycle row.
+     *
+     * @param cycleId the cycle id
+     */
     public void deleteCycle(int cycleId) {
         String sql = "DELETE FROM Cycles WHERE budgetCycleId=?";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -307,7 +409,12 @@ public class DAOLayer {
         }
     }
 
-    // Settings: reset current cycle and related data
+    /**
+     * Resets a cycle by deleting the cycle and all related transactions, snapshots, and alerts.
+     *
+     * @param cycleId the cycle id
+     * @return {@code true} if the cycle row was deleted
+     */
     public boolean resetCycle(int cycleId) {
         if (cycleId <= 0) return false;
 
@@ -365,7 +472,12 @@ public class DAOLayer {
         }
     }
 
-    // ── SD-7: save setting ───────────────────────────────────────────────────
+    /**
+     * Saves (inserts or replaces) a setting value.
+     *
+     * @param key the setting key
+     * @param value the value to store
+     */
     public void saveSetting(String key, String value) {
         String sql = "INSERT OR REPLACE INTO Settings (key, value) VALUES (?, ?)";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
@@ -377,7 +489,13 @@ public class DAOLayer {
         }
     }
 
-    // HELPERS
+    /**
+     * Maps a cycle row to a {@link BudgetCycle} and derives UI-friendly computed fields.
+     *
+     * @param rs result set positioned on a cycle row
+     * @return mapped cycle
+     * @throws SQLException if reading columns fails
+     */
     private BudgetCycle mapCycle(ResultSet rs) throws SQLException {
         BudgetCycle c = new BudgetCycle(
             rs.getFloat("totalAmount"),
@@ -386,13 +504,19 @@ public class DAOLayer {
         );
         c.setBudgetCycleId(rs.getInt("budgetCycleId"));
         c.setRemainingBalance(rs.getFloat("remainingBalance"));
-        // Fixed daily limit (based on cycle length), then derive days-left fields for today.
         c.calculateWeeklyLimit();
         c.calculateBalance();
         c.setActive(rs.getBoolean("isActive"));
         return c;
     }
 
+    /**
+     * Maps a transaction row to an {@link Expense}.
+     *
+     * @param rs result set positioned on an expense row
+     * @return mapped expense
+     * @throws SQLException if reading columns fails
+     */
     private Expense mapExpense(ResultSet rs) throws SQLException {
         Expense e = new Expense(
             rs.getFloat("amount"),

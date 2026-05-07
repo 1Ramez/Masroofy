@@ -18,33 +18,32 @@ import masroofy.App;
 import masroofy.controller.Clock;
 import masroofy.data.DAOLayer;
 import masroofy.model.BudgetCycle;
-
 /**
- * DashboardScene
- * SD-3: display updated Safe Daily Limit
- * SD-5: rollover check once per session
+ * Dashboard view that displays today's remaining safe spending limit.
  *
- * Bug Fixes:
- * 1. Uses App.setContent() — no new Scene, no minimize bug
- * 2. Chart removed from dashboard — only shown in StatsScene on demand
- * 3. Rollover only runs once per session
+ * <p>The dashboard performs a once-per-session rollover check and provides navigation to other scenes.</p>
  */
+
 public class DashboardScene {
 
     private final Stage       stage;
     private       BudgetCycle cycle;
-
-    // Rollover runs once per app session only
     private static boolean rolloverDone  = false;
     private static String  rolloverColor = "#C9A84C";
-
-    public DashboardScene(Stage stage, BudgetCycle cycle) {
+/**
+ * Creates a dashboard scene instance.
+ *
+ * @param stage application stage
+ * @param cycle active budget cycle
+ */
+public DashboardScene(Stage stage, BudgetCycle cycle) {
         this.stage = stage;
         this.cycle = cycle;
     }
-
-    public void show() {
-        // SD-5: once per session only
+/**
+ * Builds and displays the dashboard UI.
+ */
+public void show() {
         if (!rolloverDone) {
             Clock clock = new Clock();
             Clock.RolloverResult result = clock.performCheck();
@@ -54,8 +53,6 @@ public class DashboardScene {
             }
             rolloverDone = true;
         }
-
-        // Remaining safe limit today = fixed daily limit - spent today
         DAOLayer daoLayer = new DAOLayer();
         float spentToday = daoLayer.getTotalSpentOnDate(cycle.getBudgetCycleId(), LocalDate.now());
         cycle.calculateBalance();
@@ -77,18 +74,21 @@ public class DashboardScene {
             buildActionButtons()
         );
         root.setCenter(center);
-
-        // Fix 1: swap content instead of new Scene
         App.setContent(root);
     }
-
-    public static void resetSession() {
+/**
+ * Resets the in-memory session flags used by rollover logic.
+ */
+public static void resetSession() {
         rolloverDone  = false;
         rolloverColor = "#C9A84C";
     }
-
-    // ── Limit Card ────────────────────────────────────────────────────────────
-    private VBox buildLimitCard() {
+/**
+ * Builds the primary card showing today's remaining safe limit.
+ *
+ * @return limit card node
+ */
+private VBox buildLimitCard() {
         VBox card = new VBox(8);
         card.setAlignment(Pos.CENTER);
         card.setPadding(new Insets(32));
@@ -124,9 +124,12 @@ public class DashboardScene {
         card.getChildren().addAll(titleLbl, limitLbl, remainLbl);
         return card;
     }
-
-    // ── Stats Row ─────────────────────────────────────────────────────────────
-    private HBox buildStatsRow() {
+/**
+ * Builds the summary stats row.
+ *
+ * @return stats row node
+ */
+private HBox buildStatsRow() {
         HBox row = new HBox(12);
         row.setAlignment(Pos.CENTER);
 
@@ -140,9 +143,12 @@ public class DashboardScene {
         );
         return row;
     }
-
-    // ── Action Buttons ────────────────────────────────────────────────────────
-    private HBox buildActionButtons() {
+/**
+ * Builds the action button row used for navigation.
+ *
+ * @return action buttons container
+ */
+private HBox buildActionButtons() {
         HBox box = new HBox(12);
         box.setAlignment(Pos.CENTER);
 
@@ -153,16 +159,18 @@ public class DashboardScene {
 
         logBtn.setOnAction(e      -> new ExpenseScene(stage, cycle).show());
         historyBtn.setOnAction(e  -> new HistoryScene(stage, cycle).show());
-        // Fix 2: chart only loaded when Stats is explicitly clicked
         statsBtn.setOnAction(e    -> new StatsScene(stage, cycle).show());
         settingsBtn.setOnAction(e -> new SettingsScene(stage, cycle).show());
 
         box.getChildren().addAll(logBtn, historyBtn, statsBtn, settingsBtn);
         return box;
     }
-
-    // ── Navbar ────────────────────────────────────────────────────────────────
-    private HBox buildNavbar() {
+/**
+ * Builds the dashboard navbar.
+ *
+ * @return navbar node
+ */
+private HBox buildNavbar() {
         HBox nav = new HBox();
         nav.setPadding(new Insets(16, 24, 16, 24));
         nav.setAlignment(Pos.CENTER_LEFT);
@@ -188,9 +196,15 @@ public class DashboardScene {
         nav.getChildren().addAll(brand, spacer, info);
         return nav;
     }
-
-    // ── Helpers ───────────────────────────────────────────────────────────────
-    private VBox miniCard(String label, String value, String color) {
+/**
+ * Creates a compact stat card used in the stats row.
+ *
+ * @param label stat label
+ * @param value stat value
+ * @param color value color
+ * @return card node
+ */
+private VBox miniCard(String label, String value, String color) {
         VBox c = new VBox(4);
         c.setAlignment(Pos.CENTER);
         c.setPadding(new Insets(14, 20, 14, 20));
@@ -210,8 +224,16 @@ public class DashboardScene {
         c.getChildren().addAll(v, l);
         return c;
     }
-
-    private Button actionButton(String text, String bg, String fg, boolean bold) {
+/**
+ * Creates a styled action button.
+ *
+ * @param text button text
+ * @param bg background color
+ * @param fg text color
+ * @param bold whether to render the label in bold
+ * @return button instance
+ */
+private Button actionButton(String text, String bg, String fg, boolean bold) {
         Button b = new Button(text);
         b.setPrefHeight(42);
         b.setPrefWidth(138);

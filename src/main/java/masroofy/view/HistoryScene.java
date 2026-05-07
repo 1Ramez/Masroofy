@@ -14,30 +14,33 @@ import masroofy.model.BudgetCycle;
 import masroofy.model.Expense;
 
 import java.util.List;
-
 /**
- * HistoryScene
- * Shows all transactions for the current cycle.
- * Fix: uses App.setContent() — no minimize bug
+ * Transaction history view that lists all expenses for the active cycle.
  */
+
 public class HistoryScene {
 
     private final Stage       stage;
     private final BudgetCycle cycle;
     private final DAOLayer    daoLayer;
-
-    public HistoryScene(Stage stage, BudgetCycle cycle) {
+/**
+ * Creates the history view.
+ *
+ * @param stage application stage
+ * @param cycle active cycle
+ */
+public HistoryScene(Stage stage, BudgetCycle cycle) {
         this.stage    = stage;
         this.cycle    = cycle;
         this.daoLayer = new DAOLayer();
     }
-
-    public void show() {
+/**
+ * Builds and displays the history UI.
+ */
+public void show() {
         VBox root = new VBox(20);
         root.setPadding(new Insets(32));
         root.setStyle("-fx-background-color: #0D0D0D;");
-
-        // Header
         HBox header = new HBox(12);
         header.setAlignment(Pos.CENTER_LEFT);
         Button back = new Button("← Back");
@@ -53,8 +56,6 @@ public class HistoryScene {
         title.setFont(Font.font("Segoe UI", 22));
         title.setTextFill(Color.web("#EEEEEE"));
         header.getChildren().addAll(back, title);
-
-        // Table
         TableView<Expense> table = new TableView<>();
         table.setStyle("""
             -fx-background-color: #1A1A1A;
@@ -88,7 +89,15 @@ public class HistoryScene {
     }
 
     @SuppressWarnings("unchecked")
-    private <T, S> TableColumn<T, S> col(String title, String property, double width) {
+/**
+ * Creates a configured table column bound to a JavaFX property name.
+ *
+ * @param title column title
+ * @param property bean property name
+ * @param width preferred width
+ * @return table column instance
+ */
+private <T, S> TableColumn<T, S> col(String title, String property, double width) {
         TableColumn<T, S> c = new TableColumn<>(title);
         c.setCellValueFactory(new PropertyValueFactory<>(property));
         c.setPrefWidth(width);

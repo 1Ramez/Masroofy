@@ -9,11 +9,22 @@ import masroofy.model.BudgetCycle;
 import masroofy.view.DashboardScene;
 import masroofy.view.InitScene;
 
+/**
+ * JavaFX application entry point for Masroofy.
+ *
+ * <p>The app boots into either {@link InitScene} or {@link DashboardScene} depending on whether an
+ * active cycle exists in the local SQLite database.</p>
+ */
 public class App extends Application {
 
     private static StackPane sceneRoot;
     private static Stage primaryStage;
 
+    /**
+     * Initializes the primary stage and shows the initial view.
+     *
+     * @param stage primary stage provided by JavaFX
+     */
     @Override
     public void start(Stage stage){
         primaryStage = stage;
@@ -37,14 +48,29 @@ public class App extends Application {
         }
     }
 
+    /**
+     * Replaces the root content of the application's single {@link Scene}.
+     *
+     * @param content the node to display
+     */
     public static void setContent(javafx.scene.Node content){
         sceneRoot.getChildren().setAll(content);
     }
 
+    /**
+     * Returns the primary JavaFX stage.
+     *
+     * @return primary stage
+     */
     public static Stage getStage(){
         return primaryStage;
     }
 
+    /**
+     * Launches the JavaFX application.
+     *
+     * @param args command line args
+     */
     public static void main(String[] args) {
         launch(args);
     }

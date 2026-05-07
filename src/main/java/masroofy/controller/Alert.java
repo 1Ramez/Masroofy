@@ -6,6 +6,11 @@ import masroofy.data.DAOLayer;
 import masroofy.model.BudgetCycle;
 
 
+/**
+ * Evaluates spending thresholds and triggers user notifications.
+ *
+ * <p>Alerts are de-duplicated by persisting an alert log entry per cycle and alert type.</p>
+ */
 public class Alert {
 
     private static final float THRESHOLD_WARNING   = 80f;
@@ -17,17 +22,29 @@ public class Alert {
     private float currentPercent;
     private String message;
 
+    /**
+     * Creates an alert service backed by the DAO layer and notification system.
+     */
     public Alert() {
         this.daoLayer = new DAOLayer();
         this.notification = new Notification();
     }
 
-    // SD-6 Step 3: checkSpending()
-    // Called after every expense is logged
+    /**
+     * Checks spending for the given cycle and fires warnings/exhaustion alerts when thresholds are
+     * crossed.
+     *
+     * <p>The check evaluates:</p>
+     * <ul>
+     *   <li>Daily usage: percentage of today's safe daily limit used</li>
+     *   <li>Total usage: percentage of the total cycle budget used</li>
+     * </ul>
+     *
+     * @param cycle active cycle to evaluate
+     */
     public void checkSpending(BudgetCycle cycle) {
         boolean percentSet = false;
 
-        // Daily usage: percent of today's daily limit used
         float dailyLimit = cycle.getSafeDailyLimit();
         if (dailyLimit > 0) {
             float remainingDaily = cycle.getRemainingDailyLimit();
@@ -45,7 +62,6 @@ public class Alert {
             );
         }
 
-        // Total allowance usage: percent of total cycle budget used
         float totalAmount = cycle.getTotalAmount();
         if (totalAmount > 0) {
             float remaining = cycle.getRemainingBalance();
@@ -62,6 +78,15 @@ public class Alert {
         }
     }
 
+    /**
+     * Fires an alert for a given scope if thresholds are reached and the alert wasn't already fired.
+     *
+     * @param cycle active cycle
+     * @param percent used percentage for the scope
+     * @param scopeKey scope key suffix used for de-duplication
+     * @param warningMessage message used when warning threshold is reached
+     * @param exhaustedMessage message used when exhaustion threshold is reached
+     */
     private void maybeFireAlert(
         BudgetCycle cycle,
         float percent,
@@ -86,14 +111,29 @@ public class Alert {
         }
     }
 
-    // SD-6 Step 4: determineType() : String
-    // Returns alert type based on percent used
+    /**
+     * Determines the alert type for a percent value.
+     *
+     * @param percent percentage used
+     * @return {@code "EXHAUSTED"}, {@code "WARNING"}, or {@code null} when under thresholds
+     */
     private String determineType(float percent) {
         if (percent >= THRESHOLD_EXHAUSTED) return "EXHAUSTED";
         if (percent >= THRESHOLD_WARNING)   return "WARNING";
         return null;
     }
 
+    /**
+     * Returns the last percent value computed by {@link #checkSpending(BudgetCycle)}.
+     *
+     * @return current percent
+     */
     public float  getCurrentPercent() { return currentPercent; }
+
+    /**
+     * Returns the last alert message produced by this instance.
+     *
+     * @return message (may be {@code null})
+     */
     public String getMessage()        { return message; }
 }

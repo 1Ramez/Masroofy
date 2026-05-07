@@ -10,40 +10,41 @@ import java.util.List;
 import masroofy.data.DAOLayer;
 
 /**
- * ChartGenerator
- * MVC Role : Controller
- * SD-4     : generatePieChart() → Python subprocess → chart image
+ * Generates spending charts for the UI by delegating rendering to a Python script.
  *
- * Bug Fix  : Python script path now resolved correctly for mvn javafx:run
+ * <p>The generator aggregates expenses by category, writes a temporary CSV file, and invokes
+ * {@code chart_generator.py} via {@link ProcessBuilder} to produce a PNG.</p>
  */
 public class ChartGenerator {
 
     private final DAOLayer daoLayer;
 
-    // Output chart path — in project root so it's always findable
     private static final String CHART_OUTPUT = "chart_output.png";
 
+    /**
+     * Creates a new chart generator backed by the DAO layer.
+     */
     public ChartGenerator() {
         this.daoLayer = new DAOLayer();
     }
 
-    // SD-4 Step 1: generatePieChart() : void
-    // Returns path to chart image, or null if no data / Python not available
+    /**
+     * Generates a pie chart PNG for the given cycle.
+     *
+     * @param cycleId the cycle id to chart
+     * @return absolute path to the generated image, or {@code null} when no data is available or
+     *         Python execution fails
+     */
     public String generatePieChart(int cycleId) {
-
-        // SD-4 Step 2+3: SELECT * FROM Transactions JOIN Categories
         List<Object[]> expenses = daoLayer.getExpensesByCategory(cycleId);
 
-        // SD-4 alt [no expenses logged]
         if (expenses == null || expenses.isEmpty()) {
             System.out.println("[ChartGenerator] No expenses found.");
             return null;
         }
 
-        // Format data as CSV for Python
         String csvData = formatDataToCSV(expenses);
 
-        // Write CSV to temp file
         File tempCsv;
         try {
             tempCsv = File.createTempFile("masroofy_chart_", ".csv");
@@ -56,19 +57,20 @@ public class ChartGenerator {
             return null;
         }
 
-        // Resolve Python script path
-        // Try multiple locations to support both mvn javafx:run and IDE run
         String scriptPath = resolvePythonScriptPath();
         if (scriptPath == null) {
             System.err.println("[ChartGenerator] chart_generator.py not found.");
             return null;
         }
 
-        // SD-4 Step 7: createPieChart(df: DataFrame) — call Python
         return callPython(scriptPath, tempCsv.getAbsolutePath(), CHART_OUTPUT);
     }
 
-    // Tries multiple common locations for the Python script
+    /**
+     * Tries multiple common locations for the Python script.
+     *
+     * @return an existing script path, or {@code null} if not found
+     */
     private String resolvePythonScriptPath() {
         String[] candidates = {
             "src/main/resources/python/chart_generator.py",
@@ -83,7 +85,6 @@ public class ChartGenerator {
             }
         }
 
-        // Also try relative to jar location
         try {
             String jarDir = new File(
                 ChartGenerator.class.getProtectionDomain()
@@ -91,24 +92,29 @@ public class ChartGenerator {
             ).getParent();
             String fromJar = jarDir + "/chart_generator.py";
             if (new File(fromJar).exists()) return fromJar;
-        } catch (Exception ignored) {}
+        } catch (Exception ignored) { }
 
         return null;
     }
 
-    // Calls Python subprocess and waits for chart to be generated
+    /**
+     * Calls the Python subprocess and waits for the output file to be created.
+     *
+     * @param scriptPath python script path
+     * @param csvPath input csv path
+     * @param outputPath output png path
+     * @return absolute output path, or {@code null} on failure
+     */
     private String callPython(String scriptPath, String csvPath, String outputPath) {
-        // Try python3 first, fallback to python
         for (String pythonCmd : new String[]{"python3", "python"}) {
             try {
                 ProcessBuilder pb = new ProcessBuilder(
                     pythonCmd, scriptPath, csvPath, outputPath
                 );
                 pb.redirectErrorStream(true);
-                pb.directory(new File("."));    // run from project root
+                pb.directory(new File("."));
                 Process process = pb.start();
 
-                // Print Python output for debugging
                 BufferedReader reader = new BufferedReader(
                     new InputStreamReader(process.getInputStream())
                 );
@@ -129,7 +135,6 @@ public class ChartGenerator {
                 }
 
             } catch (IOException e) {
-                // This python command not found, try next
                 System.out.println("[ChartGenerator] " + pythonCmd + " not found, trying next...");
             } catch (InterruptedException e) {
                 Thread.currentThread().interrupt();
@@ -142,7 +147,12 @@ public class ChartGenerator {
         return null;
     }
 
-    // Format expense data as CSV string for Python
+    /**
+     * Formats aggregated category totals into a CSV string for the Python script.
+     *
+     * @param data aggregated rows from {@link DAOLayer#getExpensesByCategory(int)}
+     * @return csv string formatted as {@code category,amount}
+     */
     private String formatDataToCSV(List<Object[]> data) {
         StringBuilder sb = new StringBuilder("category,amount\n");
         for (Object[] row : data) {
@@ -151,3 +161,4 @@ public class ChartGenerator {
         return sb.toString();
     }
 }
+

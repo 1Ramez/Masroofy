@@ -15,29 +15,31 @@ import javafx.stage.Stage;
 import masroofy.App;
 import masroofy.controller.CycleController;
 import masroofy.model.BudgetCycle;
-
 /**
- * InitScene
- * SD-1: enterAmountAndDates() → createCycle() → navigateToDashboard()
- * Fix : uses App.setContent() instead of new Scene() — no minimize bug
+ * Initial setup view used to create a new budget cycle.
  */
+
 public class InitScene {
 
     private final Stage stage;
     private final CycleController controller;
-
-    public InitScene(Stage stage){
+/**
+ * Creates the setup view.
+ *
+ * @param stage application stage
+ */
+public InitScene(Stage stage){
         this.stage = stage;
         this.controller = new CycleController();
     }
-
-    public void show(){
+/**
+ * Builds and displays the setup UI.
+ */
+public void show(){
         VBox root = new VBox(24);
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(48));
         root.setStyle("-fx-background-color: #0D0D0D;");
-
-        // Title
         Label title = new Label("Masroofy");
         title.setFont(Font.font("Segoe UI", 36));
         title.setTextFill(Color.web("#C9A84C"));
@@ -45,8 +47,6 @@ public class InitScene {
         Label subtitle = new Label("Set up your budget cycle");
         subtitle.setFont(Font.font("Segoe UI", 16));
         subtitle.setTextFill(Color.web("#888888"));
-
-        // Card
         VBox card = new VBox(16);
         card.setAlignment(Pos.CENTER_LEFT);
         card.setPadding(new Insets(32));
@@ -86,8 +86,6 @@ public class InitScene {
             -fx-font-weight: bold;
             -fx-cursor: hand;
             """);
-        
-        //Used in SD-1
         btn.setOnAction(e -> {
             errorLbl.setText("");
             try {
@@ -100,7 +98,6 @@ public class InitScene {
                 if (cycle == null){
                     errorLbl.setText(controller.getValidationError());
                 }else{
-                    // Navigate to Dashboard using App.setContent — no new Scene
                     new DashboardScene(stage, cycle).show();
                 }
             }catch (NumberFormatException ex){
@@ -116,19 +113,27 @@ public class InitScene {
         );
 
         root.getChildren().addAll(title, subtitle, card);
-
-        // Fix: swap content, don't create new Scene
         App.setContent(root);
     }
-
-    private Label fieldLabel(String text) {
+/**
+ * Creates a styled label used for form fields.
+ *
+ * @param text label text
+ * @return label instance
+ */
+private Label fieldLabel(String text) {
         Label l = new Label(text);
         l.setFont(Font.font("Segoe UI", 13));
         l.setTextFill(Color.web("#AAAAAA"));
         return l;
     }
-
-    private TextField inputField(String prompt) {
+/**
+ * Creates a styled text field.
+ *
+ * @param prompt prompt text
+ * @return text field instance
+ */
+private TextField inputField(String prompt) {
         TextField tf = new TextField();
         tf.setPromptText(prompt);
         tf.setPrefHeight(40);
@@ -143,8 +148,12 @@ public class InitScene {
             """);
         return tf;
     }
-
-    private DatePicker styledDatePicker() {
+/**
+ * Creates a styled date picker.
+ *
+ * @return date picker instance
+ */
+private DatePicker styledDatePicker() {
         DatePicker dp = new DatePicker();
         dp.setPrefHeight(40);
         dp.setPrefWidth(376);

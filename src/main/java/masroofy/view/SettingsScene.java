@@ -14,39 +14,35 @@ import masroofy.App;
 import masroofy.controller.CycleController;
 import masroofy.data.DAOLayer;
 import masroofy.model.BudgetCycle;
-
-// NOTE: We do NOT import javafx.scene.control.Alert here
-// because masroofy.controller.Alert would conflict.
-// We use javafx.scene.control.Alert with its full class name below.
-
 /**
- * SettingsScene
- * SD-7: offline persistence info + cycle reset
- *
- * Bug Fix 3: removed wildcard import of javafx.scene.control.*
- * which was conflicting with masroofy.controller.Alert.
- * Now uses javafx.scene.control.Alert by full class name.
+ * Settings view showing cycle details, storage status, and reset actions.
  */
+
 public class SettingsScene {
 
     private final Stage           stage;
     private final BudgetCycle     cycle;
     private final CycleController cycleController;
     private final DAOLayer        daoLayer;
-
-    public SettingsScene(Stage stage, BudgetCycle cycle) {
+/**
+ * Creates the settings view.
+ *
+ * @param stage application stage
+ * @param cycle active cycle
+ */
+public SettingsScene(Stage stage, BudgetCycle cycle) {
         this.stage           = stage;
         this.cycle           = cycle;
         this.cycleController = new CycleController();
         this.daoLayer        = new DAOLayer();
     }
-
-    public void show() {
+/**
+ * Builds and displays the settings UI.
+ */
+public void show() {
         VBox root = new VBox(20);
         root.setPadding(new Insets(32));
         root.setStyle("-fx-background-color: #0D0D0D;");
-
-        // Header
         HBox header = new HBox(12);
         header.setAlignment(Pos.CENTER_LEFT);
         Button back = new Button("← Back");
@@ -62,8 +58,6 @@ public class SettingsScene {
         title.setFont(Font.font("Segoe UI", 22));
         title.setTextFill(Color.web("#EEEEEE"));
         header.getChildren().addAll(back, title);
-
-        // Cycle info card
         VBox infoCard = sectionCard("Current Cycle");
         infoCard.getChildren().addAll(
             infoRow("Start Date",       cycle.getStartDate().toString()),
@@ -73,8 +67,6 @@ public class SettingsScene {
             infoRow("Safe Daily Limit", String.format("%.2f EGP", cycle.getSafeDailyLimit())),
             infoRow("Days Left",        cycle.getRemainingDays() + " days")
         );
-
-        // Storage card — SD-7
         VBox storageCard = sectionCard("Storage");
         String dbPath = daoLayer.getSetting("db_path");
         if (dbPath == null) {
@@ -88,8 +80,6 @@ public class SettingsScene {
         dbLbl.setFont(Font.font("Segoe UI", 12));
         dbLbl.setTextFill(Color.web("#666666"));
         storageCard.getChildren().addAll(savedLbl, dbLbl);
-
-        // Danger zone card
         VBox dangerCard = sectionCard("Danger Zone");
         Label dangerInfo = new Label(
             "Reset current cycle and all its transactions. This cannot be undone."
@@ -115,13 +105,12 @@ public class SettingsScene {
         dangerCard.getChildren().addAll(dangerInfo, resetBtn);
 
         root.getChildren().addAll(header, infoCard, storageCard, dangerCard);
-
-        // Fix 1: swap content, no new Scene
         App.setContent(root);
     }
-
-    private void showResetConfirmation() {
-        // Fix 3: use full class name to avoid conflict with masroofy.controller.Alert
+/**
+ * Shows a confirmation dialog and, if accepted, resets the current cycle.
+ */
+private void showResetConfirmation() {
         javafx.scene.control.Alert dialog = new javafx.scene.control.Alert(
             javafx.scene.control.Alert.AlertType.CONFIRMATION
         );
@@ -147,8 +136,13 @@ public class SettingsScene {
             }
         });
     }
-
-    private VBox sectionCard(String sectionTitle) {
+/**
+ * Creates a styled settings section card.
+ *
+ * @param sectionTitle section title
+ * @return card container
+ */
+private VBox sectionCard(String sectionTitle) {
         VBox card = new VBox(12);
         card.setPadding(new Insets(20));
         card.setStyle("""
@@ -169,8 +163,14 @@ public class SettingsScene {
         card.getChildren().addAll(lbl, sep);
         return card;
     }
-
-    private HBox infoRow(String key, String value) {
+/**
+ * Creates a key/value row for cycle information display.
+ *
+ * @param key label
+ * @param value value
+ * @return row container
+ */
+private HBox infoRow(String key, String value) {
         HBox row = new HBox();
         row.setAlignment(Pos.CENTER_LEFT);
 

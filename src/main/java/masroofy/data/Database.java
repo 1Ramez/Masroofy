@@ -6,13 +6,9 @@ import java.sql.SQLException;
 import java.sql.Statement;
 
 /**
- * @file Database.java
- * @brief Handles database connection and table initialization.
- */
-
-/**
- * @class Database
- * @brief Singleton class responsible for managing the SQLite database connection.
+ * Manages the application's SQLite connection and ensures the schema exists.
+ *
+ * <p>This is a lazy-initialized singleton used by {@link DAOLayer}.</p>
  */
 public class Database {
 
@@ -21,7 +17,7 @@ public class Database {
     private static final String DB_URL = "jdbc:sqlite:masroofy.db";
 
     /**
-     * @brief Private constructor that initializes the database connection and tables.
+     * Creates the database connection and initializes required tables.
      */
     private Database() {
         try {
@@ -36,8 +32,9 @@ public class Database {
     }
 
     /**
-     * @brief Returns the singleton instance of the Database class.
-     * @return Database instance
+     * Returns the singleton database instance.
+     *
+     * @return the singleton instance
      */
     public static Database getInstance() {
         if (instance == null) instance = new Database();
@@ -45,15 +42,16 @@ public class Database {
     }
 
     /**
-     * @brief Retrieves the active database connection.
-     * @return Database connection object
+     * Returns the active JDBC connection.
+     *
+     * @return the connection
      */
     public Connection getConnection() {
         return connection;
     }
 
     /**
-     * @brief Closes the database connection if it is open.
+     * Closes the underlying JDBC connection if it is open.
      */
     public void closeConnection() {
         try {
@@ -65,8 +63,9 @@ public class Database {
     }
 
     /**
-     * @brief Creates database tables and inserts default data if necessary.
-     * @throws SQLException If a database error occurs
+     * Creates the required tables and inserts default category rows when missing.
+     *
+     * @throws SQLException if schema initialization fails
      */
     private void initTables() throws SQLException {
         Statement s = connection.createStatement();

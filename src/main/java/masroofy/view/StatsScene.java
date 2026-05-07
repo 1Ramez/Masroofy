@@ -13,31 +13,34 @@ import masroofy.controller.ChartGenerator;
 import masroofy.model.BudgetCycle;
 
 import java.io.File;
-
 /**
- * StatsScene
- * SD-4: generatePieChart() only runs here — not on dashboard
- * Fix: uses App.setContent() — no minimize bug
+ * Statistics view that generates and displays a spending chart for the cycle.
  */
+
 public class StatsScene {
 
     private final Stage          stage;
     private final BudgetCycle    cycle;
     private final ChartGenerator chartGenerator;
-
-    public StatsScene(Stage stage, BudgetCycle cycle) {
+/**
+ * Creates the stats view.
+ *
+ * @param stage application stage
+ * @param cycle active cycle
+ */
+public StatsScene(Stage stage, BudgetCycle cycle) {
         this.stage          = stage;
         this.cycle          = cycle;
         this.chartGenerator = new ChartGenerator();
     }
-
-    public void show() {
+/**
+ * Builds and displays the stats UI.
+ */
+public void show() {
         VBox root = new VBox(24);
         root.setPadding(new Insets(32));
         root.setAlignment(Pos.TOP_CENTER);
         root.setStyle("-fx-background-color: #0D0D0D;");
-
-        // Header
         HBox header = new HBox(12);
         header.setAlignment(Pos.CENTER_LEFT);
         Button back = new Button("← Back");
@@ -53,8 +56,6 @@ public class StatsScene {
         title.setTextFill(Color.web("#EEEEEE"));
         header.getChildren().addAll(back, title);
         header.setMaxWidth(Double.MAX_VALUE);
-
-        // Summary cards
         HBox summary = new HBox(12);
         summary.setAlignment(Pos.CENTER);
         summary.getChildren().addAll(
@@ -67,8 +68,6 @@ public class StatsScene {
             statCard("Days Left",
                 cycle.getRemainingDays() + " days",                     "#9C6FD6")
         );
-
-        // Chart card
         VBox chartCard = new VBox(16);
         chartCard.setAlignment(Pos.CENTER);
         chartCard.setPadding(new Insets(24));
@@ -84,20 +83,15 @@ public class StatsScene {
         Label chartTitle = new Label("Spending by Category");
         chartTitle.setFont(Font.font("Segoe UI", 15));
         chartTitle.setTextFill(Color.web("#AAAAAA"));
-
-        // Loading label shown while chart generates
         Label loadingLbl = new Label("Generating chart...");
         loadingLbl.setFont(Font.font("Segoe UI", 13));
         loadingLbl.setTextFill(Color.web("#555555"));
         chartCard.getChildren().addAll(chartTitle, loadingLbl);
-
-        // SD-4: generatePieChart — only called here
         String chartPath = chartGenerator.generatePieChart(cycle.getBudgetCycleId());
 
         chartCard.getChildren().remove(loadingLbl);
 
         if (chartPath == null) {
-            // SD-4 alt [no expenses]
             Label noData = new Label("No data available. Log an expense to see your insights.");
             noData.setFont(Font.font("Segoe UI", 13));
             noData.setTextFill(Color.web("#555555"));
@@ -106,7 +100,6 @@ public class StatsScene {
         } else {
             File f = new File(chartPath);
             if (f.exists()) {
-                // Reload image fresh to avoid cache
                 ImageView img = new ImageView(
                     new Image(f.toURI().toString(), true)
                 );
@@ -121,8 +114,6 @@ public class StatsScene {
                 chartCard.getChildren().add(err);
             }
         }
-
-        // Refresh button
         Button refreshBtn = new Button("↻  Refresh Chart");
         refreshBtn.setStyle("""
             -fx-background-color: transparent;
@@ -140,8 +131,15 @@ public class StatsScene {
         root.getChildren().addAll(header, summary, chartCard, refreshBtn);
         App.setContent(root);
     }
-
-    private VBox statCard(String label, String value, String color) {
+/**
+ * Creates a summary stat card.
+ *
+ * @param label stat label
+ * @param value stat value
+ * @param color value color
+ * @return card container
+ */
+private VBox statCard(String label, String value, String color) {
         VBox c = new VBox(6);
         c.setAlignment(Pos.CENTER);
         c.setPadding(new Insets(16, 22, 16, 22));
