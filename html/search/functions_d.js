@@ -1,0 +1,28 @@
+var searchData=
+[
+  ['savesetting_0',['saveSetting',['../classmasroofy_1_1data_1_1_d_a_o_layer.html#aff68555563f633b6bb6930b932380784',1,'masroofy::data::DAOLayer']]],
+  ['scenebase_1',['SceneBase',['../classmasroofy_1_1view_1_1_scene_base.html#a36c2ed7ef2973d5968103fa3dcdd30a0',1,'masroofy::view::SceneBase']]],
+  ['secondarybutton_2',['secondaryButton',['../classmasroofy_1_1view_1_1_scene_base.html#a0fc093dba13af753d2ced601cd79919d',1,'masroofy::view::SceneBase']]],
+  ['send_3',['send',['../classmasroofy_1_1controller_1_1_notification.html#add93b42c79a435055b31078ca23bc0d5',1,'masroofy.controller.Notification.send(String message)'],['../classmasroofy_1_1controller_1_1_notification.html#aee405cff3d413f69fcdec923662cedb9',1,'masroofy.controller.Notification.send(String message, Level level)']]],
+  ['setactive_4',['setActive',['../classmasroofy_1_1model_1_1_budget_cycle.html#aa050a30b6e4166cece1d72d5bfcf51ca',1,'masroofy::model::BudgetCycle']]],
+  ['setamount_5',['setAmount',['../classmasroofy_1_1model_1_1_expense.html#a55bda502838f8e0e2162f1f426a40e26',1,'masroofy::model::Expense']]],
+  ['setbudgetcycleid_6',['setBudgetCycleId',['../classmasroofy_1_1model_1_1_budget_cycle.html#aeac26edcb532e514575524371a43de4f',1,'masroofy.model.BudgetCycle.setBudgetCycleId()'],['../classmasroofy_1_1model_1_1_expense.html#a9a87ab30551e90e08f0fddec19aad4d7',1,'masroofy.model.Expense.setBudgetCycleId(int id)']]],
+  ['setcategoryid_7',['setCategoryId',['../classmasroofy_1_1model_1_1_expense.html#aefe5a101492fbdf46cef15065dc20d45',1,'masroofy::model::Expense']]],
+  ['setcontent_8',['setContent',['../classmasroofy_1_1_app.html#ae21e5e8a61d23ac36f3ffcf16612dc66',1,'masroofy::App']]],
+  ['setdate_9',['setDate',['../classmasroofy_1_1model_1_1_expense.html#a2c5a868a34a1721f0c3aee693cd78545',1,'masroofy::model::Expense']]],
+  ['setexpenseid_10',['setExpenseId',['../classmasroofy_1_1model_1_1_expense.html#a1a886525ed05c1e88def8cf6558305aa',1,'masroofy::model::Expense']]],
+  ['setid_11',['setId',['../classmasroofy_1_1model_1_1_student.html#acb23ad10848145d47bd9633deb78079b',1,'masroofy::model::Student']]],
+  ['setnote_12',['setNote',['../classmasroofy_1_1model_1_1_expense.html#af0a8a99b5b0e13153676e6da6d695246',1,'masroofy::model::Expense']]],
+  ['setpin_13',['setPin',['../classmasroofy_1_1model_1_1_student.html#a2ae7483cae962ffdc2563f138144187f',1,'masroofy::model::Student']]],
+  ['setremainingbalance_14',['setRemainingBalance',['../classmasroofy_1_1model_1_1_budget_cycle.html#a4c0a7d4a871a3585c4572fb7f6b3686b',1,'masroofy::model::BudgetCycle']]],
+  ['setremainingdailylimit_15',['setRemainingDailyLimit',['../classmasroofy_1_1model_1_1_budget_cycle.html#a6080d4a514658b1e9e66e6ed65f2fe19',1,'masroofy::model::BudgetCycle']]],
+  ['setsafedailylimit_16',['setSafeDailyLimit',['../classmasroofy_1_1model_1_1_budget_cycle.html#a7e1b3b7a2b30e3bcc5c77006dac977e6',1,'masroofy::model::BudgetCycle']]],
+  ['setselected_17',['setSelected',['../classmasroofy_1_1model_1_1_student.html#a64613a4a6af1b26f7952960364f138bd',1,'masroofy::model::Student']]],
+  ['settingsscene_18',['SettingsScene',['../classmasroofy_1_1view_1_1_settings_scene.html#a15dba3a99b007b8a1da754ebe8557e67',1,'masroofy::view::SettingsScene']]],
+  ['show_19',['show',['../classmasroofy_1_1view_1_1_dashboard_scene.html#a02cd37415c77917a898b0e49eba9a1c8',1,'masroofy.view.DashboardScene.show()'],['../classmasroofy_1_1view_1_1_expense_scene.html#af019d70e22d2563bec5636b0584b978d',1,'masroofy.view.ExpenseScene.show()'],['../classmasroofy_1_1view_1_1_history_scene.html#a4d74a23b7d504922cff3540afd631eeb',1,'masroofy.view.HistoryScene.show()'],['../classmasroofy_1_1view_1_1_init_scene.html#aaba48674b03e097f282f7aec880c9d8a',1,'masroofy.view.InitScene.show()'],['../classmasroofy_1_1view_1_1_scene_base.html#a1c393e42db70b63b72ac5dd214573f89',1,'masroofy.view.SceneBase.show()'],['../classmasroofy_1_1view_1_1_settings_scene.html#a55b5f3180a78ba5421f9c2f789381942',1,'masroofy.view.SettingsScene.show()'],['../classmasroofy_1_1view_1_1_stats_scene.html#a1579178f3700ff9b094f5a7506569825',1,'masroofy.view.StatsScene.show()']]],
+  ['snapshot_20',['Snapshot',['../classmasroofy_1_1data_1_1_d_a_o_layer.html#a450af45b15c8ad165ee9593f5e91d0a2',1,'masroofy::data::DAOLayer']]],
+  ['start_21',['start',['../classmasroofy_1_1_app.html#af683d216f656e731b1b7ceae382cddd6',1,'masroofy::App']]],
+  ['statbox_22',['statBox',['../classmasroofy_1_1view_1_1_scene_base.html#a09290845b452eefb15bf1bf988f2d041',1,'masroofy::view::SceneBase']]],
+  ['statsscene_23',['StatsScene',['../classmasroofy_1_1view_1_1_stats_scene.html#a9345c9cf938d5812c97fc56751e448c9',1,'masroofy::view::StatsScene']]],
+  ['student_24',['Student',['../classmasroofy_1_1model_1_1_student.html#a3eba74410fa2a3281802d20b125f07b0',1,'masroofy::model::Student']]]
+];
