@@ -1,12 +1,12 @@
 package masroofy.controller;
 
+import java.time.LocalDate;
+import java.util.List;
+
 import masroofy.data.DAOLayer;
 import masroofy.model.BudgetCycle;
 import masroofy.model.Category;
 import masroofy.model.Expense;
-
-import java.time.LocalDate;
-import java.util.List;
 
 /**
  * Controller for expense logging and dashboard refresh calculations.
@@ -26,9 +26,9 @@ public class ExpenseController {
     /**
      * Creates and persists an expense for the active cycle.
      *
-     * @param amount expense amount (must be positive)
+     * @param amount     expense amount (must be positive)
      * @param categoryId category id
-     * @param note optional note
+     * @param note       optional note
      * @return created expense, or {@code null} on validation/persistence failure
      */
     public Expense addExpense(float amount, int categoryId, String note) {
@@ -68,14 +68,16 @@ public class ExpenseController {
     }
 
     /**
-     * Reloads the active cycle and computes the safe daily limit for today based on remaining
+     * Reloads the active cycle and computes the safe daily limit for today based on
+     * remaining
      * balance and spending so far.
      *
      * @return refreshed cycle, or {@code null} if no active cycle exists
      */
     public BudgetCycle refreshDashboard() {
         BudgetCycle cycle = daoLayer.findActiveCycle();
-        if (cycle == null) return null;
+        if (cycle == null)
+            return null;
 
         cycle.calculateBalance();
 
@@ -97,8 +99,8 @@ public class ExpenseController {
      */
     private void generateReport(BudgetCycle cycle) {
         System.out.println("[ExpenseController] Dashboard refreshed."
-            + " Remaining=" + cycle.getRemainingBalance()
-            + " DailyLimit=" + cycle.getSafeDailyLimit());
+                + " Remaining=" + cycle.getRemainingBalance()
+                + " DailyLimit=" + cycle.getSafeDailyLimit());
     }
 
     /**
@@ -106,6 +108,7 @@ public class ExpenseController {
      *
      * @return validation error (may be {@code null})
      */
-    public String getValidationError() { return validationError; }
+    public String getValidationError() {
+        return validationError;
+    }
 }
-

@@ -16,20 +16,22 @@ public class CycleController {
     /**
      * Creates a controller backed by the DAO layer.
      */
-    public CycleController(){
+    public CycleController() {
         this.daoLayer = new DAOLayer();
     }
 
     /**
      * Creates and persists a new budget cycle after validating input.
      *
-     * @param amount total cycle budget amount
+     * @param amount    total cycle budget amount
      * @param startDate start date (inclusive)
-     * @param endDate end date (inclusive)
-     * @return created cycle, or {@code null} when validation fails or persistence fails
+     * @param endDate   end date (inclusive)
+     * @return created cycle, or {@code null} when validation fails or persistence
+     *         fails
      */
     public BudgetCycle createCycle(float amount, LocalDate startDate, LocalDate endDate) {
-        if (!validateInput(amount, startDate, endDate)) return null;
+        if (!validateInput(amount, startDate, endDate))
+            return null;
 
         BudgetCycle cycle = new BudgetCycle(amount, startDate, endDate);
         cycle.calculateWeeklyLimit();
@@ -68,7 +70,9 @@ public class CycleController {
      *
      * @return validation error (may be {@code null})
      */
-    public String getValidationError() { return validationError; }
+    public String getValidationError() {
+        return validationError;
+    }
 
     /**
      * Emits a creation report message for debugging/logging.
@@ -77,15 +81,15 @@ public class CycleController {
      */
     private void generateReport(BudgetCycle cycle) {
         System.out.println("[CycleController] Cycle created. ID=" + cycle.getBudgetCycleId()
-            + " DailyLimit=" + cycle.getSafeDailyLimit());
+                + " DailyLimit=" + cycle.getSafeDailyLimit());
     }
 
     /**
      * Validates cycle creation inputs and sets {@link #validationError} on failure.
      *
      * @param amount total budget amount
-     * @param start start date
-     * @param end end date
+     * @param start  start date
+     * @param end    end date
      * @return {@code true} if inputs are valid
      */
     private boolean validateInput(float amount, LocalDate start, LocalDate end) {
@@ -105,4 +109,3 @@ public class CycleController {
         return true;
     }
 }
-

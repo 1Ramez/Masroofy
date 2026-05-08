@@ -12,8 +12,11 @@ import masroofy.view.InitScene;
 /**
  * JavaFX application entry point for Masroofy.
  *
- * <p>The app boots into either {@link InitScene} or {@link DashboardScene} depending on whether an
- * active cycle exists in the local SQLite database.</p>
+ * <p>
+ * The app boots into either {@link InitScene} or {@link DashboardScene}
+ * depending on whether an
+ * active cycle exists in the local SQLite database.
+ * </p>
  */
 public class App extends Application {
 
@@ -26,7 +29,7 @@ public class App extends Application {
      * @param stage primary stage provided by JavaFX
      */
     @Override
-    public void start(Stage stage){
+    public void start(Stage stage) {
         primaryStage = stage;
         sceneRoot = new StackPane();
         sceneRoot.setStyle("-fx-background-color: #0D0D0D;");
@@ -41,9 +44,9 @@ public class App extends Application {
         CycleController cc = new CycleController();
         BudgetCycle active = cc.checkActiveCycle();
 
-        if (active == null){
+        if (active == null) {
             new InitScene(stage).show();
-        }else{
+        } else {
             new DashboardScene(stage, active).show();
         }
     }
@@ -53,7 +56,7 @@ public class App extends Application {
      *
      * @param content the node to display
      */
-    public static void setContent(javafx.scene.Node content){
+    public static void setContent(javafx.scene.Node content) {
         sceneRoot.getChildren().setAll(content);
     }
 
@@ -62,7 +65,7 @@ public class App extends Application {
      *
      * @return primary stage
      */
-    public static Stage getStage(){
+    public static Stage getStage() {
         return primaryStage;
     }
 

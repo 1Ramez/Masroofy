@@ -17,8 +17,11 @@ import masroofy.model.Expense;
 /**
  * Provides database CRUD operations for Masroofy's SQLite schema.
  *
- * <p>This class centralizes SQL access for cycles, expenses, categories, alerts, daily snapshots, and
- * settings.</p>
+ * <p>
+ * This class centralizes SQL access for cycles, expenses, categories, alerts,
+ * daily snapshots, and
+ * settings.
+ * </p>
  */
 public class DAOLayer {
 
@@ -27,12 +30,14 @@ public class DAOLayer {
     /**
      * Daily snapshot record used to persist rollover results.
      *
-     * @param checkDate the date the snapshot applies to
-     * @param prevSpent the total spent on the previous day
-     * @param deficit the difference between the safe daily limit and {@code prevSpent}
+     * @param checkDate  the date the snapshot applies to
+     * @param prevSpent  the total spent on the previous day
+     * @param deficit    the difference between the safe daily limit and
+     *                   {@code prevSpent}
      * @param isNegative whether {@code deficit} is negative (overspent)
      */
-    public record Snapshot(LocalDate checkDate, float prevSpent, float deficit, boolean isNegative) { }
+    public record Snapshot(LocalDate checkDate, float prevSpent, float deficit, boolean isNegative) {
+    }
 
     /**
      * Creates a DAO backed by the application's singleton database connection.
@@ -47,13 +52,13 @@ public class DAOLayer {
      * @param cycle the cycle to insert
      * @return the generated id, or {@code -1} on failure
      */
-    public int insertCycle(BudgetCycle cycle){
+    public int insertCycle(BudgetCycle cycle) {
         String sql = """
-            INSERT INTO Cycles
-                (totalAmount, startDate, endDate, remainingBalance, safeDailyLimit, isActive)
-            VALUES (?, ?, ?, ?, ?, 1)
-            """;
-        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
+                INSERT INTO Cycles
+                    (totalAmount, startDate, endDate, remainingBalance, safeDailyLimit, isActive)
+                VALUES (?, ?, ?, ?, ?, 1)
+                """;
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setFloat(1, cycle.getTotalAmount());
             stmt.setString(2, cycle.getStartDate().toString());
             stmt.setString(3, cycle.getEndDate().toString());
@@ -80,8 +85,9 @@ public class DAOLayer {
     public BudgetCycle findActiveCycle() {
         String sql = "SELECT * FROM Cycles WHERE isActive = 1 LIMIT 1";
         try (PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
-            if (rs.next()) return mapCycle(rs);
+                ResultSet rs = stmt.executeQuery()) {
+            if (rs.next())
+                return mapCycle(rs);
         } catch (SQLException e) {
             System.err.println("[DAOLayer] findActiveCycle: " + e.getMessage());
         }
@@ -91,13 +97,13 @@ public class DAOLayer {
     /**
      * Updates the persisted safe daily limit and remaining balance for a cycle.
      *
-     * @param cycleId the cycle id
-     * @param newLimit the new safe daily limit
+     * @param cycleId    the cycle id
+     * @param newLimit   the new safe daily limit
      * @param newBalance the new remaining balance
      */
-    public void updateCycleSafeDailyLimit(int cycleId, float newLimit, float newBalance){
+    public void updateCycleSafeDailyLimit(int cycleId, float newLimit, float newBalance) {
         String sql = "UPDATE Cycles SET safeDailyLimit=?, remainingBalance=? WHERE budgetCycleId=?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)){
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setFloat(1, newLimit);
             stmt.setFloat(2, newBalance);
             stmt.setInt(3, cycleId);
@@ -112,18 +118,17 @@ public class DAOLayer {
      *
      * @return list of categories (possibly empty)
      */
-    public List<Category> getCategoryList(){
+    public List<Category> getCategoryList() {
         List<Category> list = new ArrayList<>();
         String sql = "SELECT * FROM Categories";
         try (PreparedStatement stmt = connection.prepareStatement(sql);
-             ResultSet rs = stmt.executeQuery()) {
+                ResultSet rs = stmt.executeQuery()) {
             while (rs.next()) {
                 list.add(new Category(
-                    rs.getInt("categoryId"),
-                    rs.getString("name"),
-                    rs.getFloat("amount"),
-                    rs.getBoolean("isDefault")
-                ));
+                        rs.getInt("categoryId"),
+                        rs.getString("name"),
+                        rs.getFloat("amount"),
+                        rs.getBoolean("isDefault")));
             }
         } catch (SQLException e) {
             System.err.println("[DAOLayer] getCategoryList: " + e.getMessage());
@@ -137,12 +142,12 @@ public class DAOLayer {
      * @param expense the expense to insert
      * @return the generated id, or {@code -1} on failure
      */
-    public int insertExpense(Expense expense){
+    public int insertExpense(Expense expense) {
         String sql = """
-            INSERT INTO Transactions (budgetCycleId, amount, categoryId, date, note)
-            VALUES (?, ?, ?, ?, ?)
-            """;
-        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)){
+                INSERT INTO Transactions (budgetCycleId, amount, categoryId, date, note)
+                VALUES (?, ?, ?, ?, ?)
+                """;
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
             stmt.setInt(1, expense.getBudgetCycleId());
             stmt.setFloat(2, expense.getAmount());
             stmt.setInt(3, expense.getCategoryId());
@@ -150,12 +155,12 @@ public class DAOLayer {
             stmt.setString(5, expense.getNote());
             stmt.executeUpdate();
             ResultSet keys = stmt.getGeneratedKeys();
-            if (keys.next()){
+            if (keys.next()) {
                 int id = keys.getInt(1);
                 expense.setExpenseId(id);
                 return id;
             }
-        }catch (SQLException e){
+        } catch (SQLException e) {
             System.err.println("[DAOLayer] insertExpense: " + e.getMessage());
         }
         return -1;
@@ -167,14 +172,15 @@ public class DAOLayer {
      * @param cycleId the cycle id
      * @return list of expenses (possibly empty)
      */
-    public List<Expense> getAllExpenses(int cycleId){
+    public List<Expense> getAllExpenses(int cycleId) {
         List<Expense> list = new ArrayList<>();
         String sql = "SELECT * FROM Transactions WHERE budgetCycleId=? ORDER BY date DESC";
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, cycleId);
             ResultSet rs = stmt.executeQuery();
-            while (rs.next()) list.add(mapExpense(rs));
-        }catch (SQLException e){
+            while (rs.next())
+                list.add(mapExpense(rs));
+        } catch (SQLException e) {
             System.err.println("[DAOLayer] getAllExpenses: " + e.getMessage());
         }
         return list;
@@ -184,7 +190,7 @@ public class DAOLayer {
      * Returns the total amount spent on a specific date within a cycle.
      *
      * @param cycleId the cycle id
-     * @param date the date to sum
+     * @param date    the date to sum
      * @return total spent for that day
      */
     public float getTotalSpentOnDate(int cycleId, LocalDate date) {
@@ -193,7 +199,8 @@ public class DAOLayer {
             stmt.setInt(1, cycleId);
             stmt.setString(2, date.toString());
             ResultSet rs = stmt.executeQuery();
-            if (rs.next()) return rs.getFloat(1);
+            if (rs.next())
+                return rs.getFloat(1);
         } catch (SQLException e) {
             System.err.println("[DAOLayer] getTotalSpentOnDate: " + e.getMessage());
         }
@@ -204,22 +211,23 @@ public class DAOLayer {
      * Returns aggregated expense totals by category for a cycle.
      *
      * @param cycleId the cycle id
-     * @return list of rows where each row is {@code [String categoryName, Float total]}
+     * @return list of rows where each row is
+     *         {@code [String categoryName, Float total]}
      */
-    public List<Object[]> getExpensesByCategory(int cycleId){
+    public List<Object[]> getExpensesByCategory(int cycleId) {
         List<Object[]> result = new ArrayList<>();
         String sql = """
-            SELECT c.name, SUM(t.amount) as total
-            FROM Transactions t
-            JOIN Categories c ON t.categoryId = c.categoryId
-            WHERE t.budgetCycleId = ?
-            GROUP BY t.categoryId
-            """;
+                SELECT c.name, SUM(t.amount) as total
+                FROM Transactions t
+                JOIN Categories c ON t.categoryId = c.categoryId
+                WHERE t.budgetCycleId = ?
+                GROUP BY t.categoryId
+                """;
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, cycleId);
             ResultSet rs = stmt.executeQuery();
             while (rs.next()) {
-                result.add(new Object[]{rs.getString("name"), rs.getFloat("total")});
+                result.add(new Object[] { rs.getString("name"), rs.getFloat("total") });
             }
         } catch (SQLException e) {
             System.err.println("[DAOLayer] getExpensesByCategory: " + e.getMessage());
@@ -233,25 +241,24 @@ public class DAOLayer {
      * @param cycleId the cycle id
      * @return latest snapshot, or {@code null} if none exist
      */
-    public Snapshot getLatestSnapshot(int cycleId){
+    public Snapshot getLatestSnapshot(int cycleId) {
         String sql = """
-            SELECT checkDate, prevSpent, deficit, isNegative
-            FROM DailySnapshots
-            WHERE cycleId=?
-            ORDER BY snapshotId DESC LIMIT 1
-            """;
-        try (PreparedStatement stmt = connection.prepareStatement(sql)){
+                SELECT checkDate, prevSpent, deficit, isNegative
+                FROM DailySnapshots
+                WHERE cycleId=?
+                ORDER BY snapshotId DESC LIMIT 1
+                """;
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, cycleId);
             ResultSet rs = stmt.executeQuery();
             if (rs.next()) {
                 return new Snapshot(
-                    LocalDate.parse(rs.getString("checkDate")),
-                    rs.getFloat("prevSpent"),
-                    rs.getFloat("deficit"),
-                    rs.getBoolean("isNegative")
-                );
+                        LocalDate.parse(rs.getString("checkDate")),
+                        rs.getFloat("prevSpent"),
+                        rs.getFloat("deficit"),
+                        rs.getBoolean("isNegative"));
             }
-        }catch (SQLException e){
+        } catch (SQLException e) {
             System.err.println("[DAOLayer] getLatestSnapshot: " + e.getMessage());
         }
         return null;
@@ -260,16 +267,16 @@ public class DAOLayer {
     /**
      * Inserts a daily snapshot row for today's date.
      *
-     * @param cycleId the cycle id
-     * @param prevSpent total spent yesterday
-     * @param deficit difference between safe daily limit and yesterday's spend
+     * @param cycleId    the cycle id
+     * @param prevSpent  total spent yesterday
+     * @param deficit    difference between safe daily limit and yesterday's spend
      * @param isNegative whether the user overspent (negative deficit)
      */
     public void insertDailySnapshot(int cycleId, float prevSpent, float deficit, boolean isNegative) {
         String sql = """
-            INSERT INTO DailySnapshots (cycleId, checkDate, prevSpent, deficit, isNegative)
-            VALUES (?, ?, ?, ?, ?)
-            """;
+                INSERT INTO DailySnapshots (cycleId, checkDate, prevSpent, deficit, isNegative)
+                VALUES (?, ?, ?, ?, ?)
+                """;
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, cycleId);
             stmt.setString(2, LocalDate.now().toString());
@@ -285,13 +292,13 @@ public class DAOLayer {
     /**
      * Updates remaining balance and safe daily limit for a cycle.
      *
-     * @param cycleId the cycle id
-     * @param newBalance the updated remaining balance
+     * @param cycleId       the cycle id
+     * @param newBalance    the updated remaining balance
      * @param newDailyLimit the updated safe daily limit
      */
-    public void updateCycleBalance(int cycleId, float newBalance, float newDailyLimit){
+    public void updateCycleBalance(int cycleId, float newBalance, float newDailyLimit) {
         String sql = "UPDATE Cycles SET remainingBalance=?, safeDailyLimit=? WHERE budgetCycleId=?";
-        try (PreparedStatement stmt = connection.prepareStatement(sql)){
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setFloat(1, newBalance);
             stmt.setFloat(2, newDailyLimit);
             stmt.setInt(3, cycleId);
@@ -304,7 +311,7 @@ public class DAOLayer {
     /**
      * Updates only the remaining balance for a cycle.
      *
-     * @param cycleId the cycle id
+     * @param cycleId    the cycle id
      * @param newBalance the updated remaining balance
      */
     public void updateCycleRemainingBalance(int cycleId, float newBalance) {
@@ -323,13 +330,13 @@ public class DAOLayer {
      *
      * @param cycleId the cycle id
      * @param message the alert message
-     * @param type the alert type key used for de-duplication
+     * @param type    the alert type key used for de-duplication
      */
-    public void insertAlertLog(int cycleId, String message, String type){
+    public void insertAlertLog(int cycleId, String message, String type) {
         String sql = """
-            INSERT INTO AlertLog (cycleId, message, type, isRead, createdAt)
-            VALUES (?, ?, ?, 0, ?)
-            """;
+                INSERT INTO AlertLog (cycleId, message, type, isRead, createdAt)
+                VALUES (?, ?, ?, 0, ?)
+                """;
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setInt(1, cycleId);
             stmt.setString(2, message);
@@ -342,10 +349,11 @@ public class DAOLayer {
     }
 
     /**
-     * Returns whether an alert of the specified type has already been fired for the cycle.
+     * Returns whether an alert of the specified type has already been fired for the
+     * cycle.
      *
      * @param cycleId the cycle id
-     * @param type the alert type key
+     * @param type    the alert type key
      * @return {@code true} if at least one matching log row exists
      */
     public boolean wasAlertFired(int cycleId, String type) {
@@ -354,7 +362,8 @@ public class DAOLayer {
             stmt.setInt(1, cycleId);
             stmt.setString(2, type);
             ResultSet rs = stmt.executeQuery();
-            if (rs.next()) return rs.getInt(1) > 0;
+            if (rs.next())
+                return rs.getInt(1) > 0;
         } catch (SQLException e) {
             System.err.println("[DAOLayer] wasAlertFired: " + e.getMessage());
         }
@@ -372,7 +381,8 @@ public class DAOLayer {
         try (PreparedStatement stmt = connection.prepareStatement(sql)) {
             stmt.setString(1, key);
             ResultSet rs = stmt.executeQuery();
-            if (rs.next()) return rs.getString("value");
+            if (rs.next())
+                return rs.getString("value");
         } catch (SQLException e) {
             System.err.println("[DAOLayer] getSetting: " + e.getMessage());
         }
@@ -410,13 +420,15 @@ public class DAOLayer {
     }
 
     /**
-     * Resets a cycle by deleting the cycle and all related transactions, snapshots, and alerts.
+     * Resets a cycle by deleting the cycle and all related transactions, snapshots,
+     * and alerts.
      *
      * @param cycleId the cycle id
      * @return {@code true} if the cycle row was deleted
      */
     public boolean resetCycle(int cycleId) {
-        if (cycleId <= 0) return false;
+        if (cycleId <= 0)
+            return false;
 
         boolean previousAutoCommit;
         try {
@@ -429,14 +441,13 @@ public class DAOLayer {
         try {
             connection.setAutoCommit(false);
 
-            try (PreparedStatement delTransactions =
-                     connection.prepareStatement("DELETE FROM Transactions WHERE budgetCycleId=?");
-                 PreparedStatement delSnapshots =
-                     connection.prepareStatement("DELETE FROM DailySnapshots WHERE cycleId=?");
-                 PreparedStatement delAlerts =
-                     connection.prepareStatement("DELETE FROM AlertLog WHERE cycleId=?");
-                 PreparedStatement delCycle =
-                     connection.prepareStatement("DELETE FROM Cycles WHERE budgetCycleId=?")) {
+            try (PreparedStatement delTransactions = connection
+                    .prepareStatement("DELETE FROM Transactions WHERE budgetCycleId=?");
+                    PreparedStatement delSnapshots = connection
+                            .prepareStatement("DELETE FROM DailySnapshots WHERE cycleId=?");
+                    PreparedStatement delAlerts = connection.prepareStatement("DELETE FROM AlertLog WHERE cycleId=?");
+                    PreparedStatement delCycle = connection
+                            .prepareStatement("DELETE FROM Cycles WHERE budgetCycleId=?")) {
 
                 delTransactions.setInt(1, cycleId);
                 delTransactions.executeUpdate();
@@ -455,19 +466,22 @@ public class DAOLayer {
             } catch (SQLException e) {
                 try {
                     connection.rollback();
-                } catch (SQLException ignored) { }
+                } catch (SQLException ignored) {
+                }
                 System.err.println("[DAOLayer] resetCycle: " + e.getMessage());
                 return false;
             } finally {
                 try {
                     connection.setAutoCommit(previousAutoCommit);
-                } catch (SQLException ignored) { }
+                } catch (SQLException ignored) {
+                }
             }
         } catch (SQLException e) {
             System.err.println("[DAOLayer] resetCycle(tx): " + e.getMessage());
             try {
                 connection.setAutoCommit(previousAutoCommit);
-            } catch (SQLException ignored) { }
+            } catch (SQLException ignored) {
+            }
             return false;
         }
     }
@@ -475,7 +489,7 @@ public class DAOLayer {
     /**
      * Saves (inserts or replaces) a setting value.
      *
-     * @param key the setting key
+     * @param key   the setting key
      * @param value the value to store
      */
     public void saveSetting(String key, String value) {
@@ -490,7 +504,8 @@ public class DAOLayer {
     }
 
     /**
-     * Maps a cycle row to a {@link BudgetCycle} and derives UI-friendly computed fields.
+     * Maps a cycle row to a {@link BudgetCycle} and derives UI-friendly computed
+     * fields.
      *
      * @param rs result set positioned on a cycle row
      * @return mapped cycle
@@ -498,10 +513,9 @@ public class DAOLayer {
      */
     private BudgetCycle mapCycle(ResultSet rs) throws SQLException {
         BudgetCycle c = new BudgetCycle(
-            rs.getFloat("totalAmount"),
-            LocalDate.parse(rs.getString("startDate")),
-            LocalDate.parse(rs.getString("endDate"))
-        );
+                rs.getFloat("totalAmount"),
+                LocalDate.parse(rs.getString("startDate")),
+                LocalDate.parse(rs.getString("endDate")));
         c.setBudgetCycleId(rs.getInt("budgetCycleId"));
         c.setRemainingBalance(rs.getFloat("remainingBalance"));
         c.calculateWeeklyLimit();
@@ -519,11 +533,10 @@ public class DAOLayer {
      */
     private Expense mapExpense(ResultSet rs) throws SQLException {
         Expense e = new Expense(
-            rs.getFloat("amount"),
-            rs.getInt("categoryId"),
-            rs.getInt("budgetCycleId"),
-            rs.getString("note")
-        );
+                rs.getFloat("amount"),
+                rs.getInt("categoryId"),
+                rs.getInt("budgetCycleId"),
+                rs.getString("note"));
         e.setExpenseId(rs.getInt("expenseId"));
         e.setDate(LocalDate.parse(rs.getString("date")));
         return e;

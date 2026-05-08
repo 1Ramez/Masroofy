@@ -1,19 +1,28 @@
 package masroofy.controller;
 
-import javafx.application.Platform;
-
-import java.awt.*;
+import java.awt.AWTException;
+import java.awt.Color;
+import java.awt.Graphics2D;
+import java.awt.Image;
+import java.awt.RenderingHints;
+import java.awt.SystemTray;
+import java.awt.TrayIcon;
 import java.awt.image.BufferedImage;
+
+import javafx.application.Platform;
 
 /**
  * Sends user notifications for alerts.
  *
- * <p>The primary delivery mechanism is the desktop OS notification area using AWT
- * {@link SystemTray}. When unavailable, the controller falls back to an in-app JavaFX alert.</p>
+ * <p>
+ * The primary delivery mechanism is the desktop OS notification area using AWT
+ * {@link SystemTray}. When unavailable, the controller falls back to an in-app
+ * JavaFX alert.
+ * </p>
  */
 public class Notification {
 
-    private int    notifId;
+    private int notifId;
     private String currentTitle;
     private String type;
     private String msg;
@@ -21,7 +30,9 @@ public class Notification {
     /**
      * Notification level used to map UI severity to platform notification types.
      */
-    public enum Level { WARNING, ERROR }
+    public enum Level {
+        WARNING, ERROR
+    }
 
     private static TrayIcon trayIcon;
     private static boolean trayInitAttempted = false;
@@ -46,19 +57,19 @@ public class Notification {
      * Sends a notification with the specified level.
      *
      * @param message message body
-     * @param level severity level
+     * @param level   severity level
      */
     public void send(String message, Level level) {
-        this.msg          = message;
+        this.msg = message;
         this.currentTitle = "Masroofy Alert";
         this.notifId++;
 
-        if (trySendSystemTray(message, level)) return;
+        if (trySendSystemTray(message, level))
+            return;
 
         try {
             Platform.runLater(() -> {
-                javafx.scene.control.Alert.AlertType alertType =
-                    (level == Level.ERROR)
+                javafx.scene.control.Alert.AlertType alertType = (level == Level.ERROR)
                         ? javafx.scene.control.Alert.AlertType.ERROR
                         : javafx.scene.control.Alert.AlertType.WARNING;
 
@@ -77,11 +88,12 @@ public class Notification {
      * Attempts to send a desktop notification via the system tray.
      *
      * @param message message body
-     * @param level severity level
+     * @param level   severity level
      * @return {@code true} if a system tray notification was sent
      */
     private boolean trySendSystemTray(String message, Level level) {
-        if (!SystemTray.isSupported()) return false;
+        if (!SystemTray.isSupported())
+            return false;
 
         try {
             SystemTray tray = SystemTray.getSystemTray();
@@ -95,10 +107,11 @@ public class Notification {
                 tray.add(trayIcon);
             }
 
-            if (trayIcon == null) return false;
+            if (trayIcon == null)
+                return false;
 
-            TrayIcon.MessageType msgType =
-                (level == Level.ERROR) ? TrayIcon.MessageType.ERROR : TrayIcon.MessageType.WARNING;
+            TrayIcon.MessageType msgType = (level == Level.ERROR) ? TrayIcon.MessageType.ERROR
+                    : TrayIcon.MessageType.WARNING;
 
             trayIcon.displayMessage(currentTitle, message, msgType);
             System.out.println("[Notification] Sent: " + message);
@@ -132,8 +145,8 @@ public class Notification {
      * Resets in-memory notification state.
      */
     public void maintenance() {
-        this.notifId      = 0;
-        this.msg          = null;
+        this.notifId = 0;
+        this.msg = null;
         this.currentTitle = null;
         System.out.println("[Notification] Maintenance done.");
     }
@@ -143,20 +156,25 @@ public class Notification {
      *
      * @return message (may be {@code null})
      */
-    public String getMsg()          { return msg; }
+    public String getMsg() {
+        return msg;
+    }
 
     /**
      * Returns the current title used for notifications.
      *
      * @return title (may be {@code null})
      */
-    public String getCurrentTitle() { return currentTitle; }
+    public String getCurrentTitle() {
+        return currentTitle;
+    }
 
     /**
      * Returns the internal notification id counter.
      *
      * @return notification id
      */
-    public int    getNotifId()      { return notifId; }
+    public int getNotifId() {
+        return notifId;
+    }
 }
-

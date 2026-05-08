@@ -10,10 +10,14 @@ import java.util.List;
 import masroofy.data.DAOLayer;
 
 /**
- * Generates spending charts for the UI by delegating rendering to a Python script.
+ * Generates spending charts for the UI by delegating rendering to a Python
+ * script.
  *
- * <p>The generator aggregates expenses by category, writes a temporary CSV file, and invokes
- * {@code chart_generator.py} via {@link ProcessBuilder} to produce a PNG.</p>
+ * <p>
+ * The generator aggregates expenses by category, writes a temporary CSV file,
+ * and invokes
+ * {@code chart_generator.py} via {@link ProcessBuilder} to produce a PNG.
+ * </p>
  */
 public class ChartGenerator {
 
@@ -32,7 +36,8 @@ public class ChartGenerator {
      * Generates a pie chart PNG for the given cycle.
      *
      * @param cycleId the cycle id to chart
-     * @return absolute path to the generated image, or {@code null} when no data is available or
+     * @return absolute path to the generated image, or {@code null} when no data is
+     *         available or
      *         Python execution fails
      */
     public String generatePieChart(int cycleId) {
@@ -73,9 +78,9 @@ public class ChartGenerator {
      */
     private String resolvePythonScriptPath() {
         String[] candidates = {
-            "src/main/resources/python/chart_generator.py",
-            "resources/python/chart_generator.py",
-            "chart_generator.py",
+                "src/main/resources/python/chart_generator.py",
+                "resources/python/chart_generator.py",
+                "chart_generator.py",
         };
 
         for (String path : candidates) {
@@ -87,12 +92,14 @@ public class ChartGenerator {
 
         try {
             String jarDir = new File(
-                ChartGenerator.class.getProtectionDomain()
-                    .getCodeSource().getLocation().toURI()
-            ).getParent();
+                    ChartGenerator.class.getProtectionDomain()
+                            .getCodeSource().getLocation().toURI())
+                    .getParent();
             String fromJar = jarDir + "/chart_generator.py";
-            if (new File(fromJar).exists()) return fromJar;
-        } catch (Exception ignored) { }
+            if (new File(fromJar).exists())
+                return fromJar;
+        } catch (Exception ignored) {
+        }
 
         return null;
     }
@@ -101,23 +108,21 @@ public class ChartGenerator {
      * Calls the Python subprocess and waits for the output file to be created.
      *
      * @param scriptPath python script path
-     * @param csvPath input csv path
+     * @param csvPath    input csv path
      * @param outputPath output png path
      * @return absolute output path, or {@code null} on failure
      */
     private String callPython(String scriptPath, String csvPath, String outputPath) {
-        for (String pythonCmd : new String[]{"python3", "python"}) {
+        for (String pythonCmd : new String[] { "python3", "python" }) {
             try {
                 ProcessBuilder pb = new ProcessBuilder(
-                    pythonCmd, scriptPath, csvPath, outputPath
-                );
+                        pythonCmd, scriptPath, csvPath, outputPath);
                 pb.redirectErrorStream(true);
                 pb.directory(new File("."));
                 Process process = pb.start();
 
                 BufferedReader reader = new BufferedReader(
-                    new InputStreamReader(process.getInputStream())
-                );
+                        new InputStreamReader(process.getInputStream()));
                 StringBuilder output = new StringBuilder();
                 String line;
                 while ((line = reader.readLine()) != null) {
@@ -161,4 +166,3 @@ public class ChartGenerator {
         return sb.toString();
     }
 }
-

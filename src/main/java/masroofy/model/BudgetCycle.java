@@ -6,8 +6,11 @@ import java.time.temporal.ChronoUnit;
 /**
  * Represents a budget cycle (allowance period) with derived daily limit values.
  *
- * <p>The cycle is persisted in the {@code Cycles} table and is used by controllers to compute and
- * display daily spending limits.</p>
+ * <p>
+ * The cycle is persisted in the {@code Cycles} table and is used by controllers
+ * to compute and
+ * display daily spending limits.
+ * </p>
  */
 public class BudgetCycle {
 
@@ -26,10 +29,10 @@ public class BudgetCycle {
      * Creates a new in-memory cycle with the provided budget and dates.
      *
      * @param totalAmount the total budget for the cycle
-     * @param startDate the start date (inclusive)
-     * @param endDate the end date (inclusive)
+     * @param startDate   the start date (inclusive)
+     * @param endDate     the end date (inclusive)
      */
-    public BudgetCycle(float totalAmount, LocalDate startDate, LocalDate endDate){
+    public BudgetCycle(float totalAmount, LocalDate startDate, LocalDate endDate) {
         this.totalAmount = totalAmount;
         this.startDate = startDate;
         this.endDate = endDate;
@@ -43,7 +46,7 @@ public class BudgetCycle {
      *
      * @return the computed safe daily limit
      */
-    public float calculateWeeklyLimit(){
+    public float calculateWeeklyLimit() {
         long totalDaysInclusive = ChronoUnit.DAYS.between(startDate, endDate) + 1;
         this.remainingDays = (int) Math.max(totalDaysInclusive, 1);
         if (totalDaysInclusive > 0) {
@@ -57,10 +60,13 @@ public class BudgetCycle {
     /**
      * Recomputes the number of remaining days based on today's date.
      *
-     * <p>Daily limits are derived by controllers using persisted remaining balance and today's
-     * spending.</p>
+     * <p>
+     * Daily limits are derived by controllers using persisted remaining balance and
+     * today's
+     * spending.
+     * </p>
      */
-    public void calculateBalance(){
+    public void calculateBalance() {
         long daysLeftInclusive = ChronoUnit.DAYS.between(LocalDate.now(), endDate) + 1;
         this.remainingDays = (int) Math.max(daysLeftInclusive, 1);
         this.remainingDailyLimit = safeDailyLimit;
@@ -71,7 +77,7 @@ public class BudgetCycle {
      *
      * @param expenseAmount the expense amount to subtract
      */
-    public void updateBalance(float expenseAmount){
+    public void updateBalance(float expenseAmount) {
         this.remainingBalance -= expenseAmount;
     }
 
@@ -80,7 +86,7 @@ public class BudgetCycle {
      *
      * @return cycle id
      */
-    public int getBudgetCycleId(){
+    public int getBudgetCycleId() {
         return budgetCycleId;
     }
 
@@ -89,7 +95,7 @@ public class BudgetCycle {
      *
      * @param id cycle id
      */
-    public void setBudgetCycleId(int id){
+    public void setBudgetCycleId(int id) {
         this.budgetCycleId = id;
     }
 
@@ -98,7 +104,7 @@ public class BudgetCycle {
      *
      * @return total budget amount
      */
-    public float getTotalAmount(){
+    public float getTotalAmount() {
         return totalAmount;
     }
 
@@ -107,7 +113,7 @@ public class BudgetCycle {
      *
      * @return start date
      */
-    public LocalDate getStartDate(){
+    public LocalDate getStartDate() {
         return startDate;
     }
 
@@ -116,7 +122,7 @@ public class BudgetCycle {
      *
      * @return end date
      */
-    public LocalDate getEndDate(){
+    public LocalDate getEndDate() {
         return endDate;
     }
 
@@ -125,7 +131,7 @@ public class BudgetCycle {
      *
      * @return remaining balance
      */
-    public float getRemainingBalance(){
+    public float getRemainingBalance() {
         return remainingBalance;
     }
 
@@ -134,7 +140,7 @@ public class BudgetCycle {
      *
      * @param b remaining balance
      */
-    public void setRemainingBalance(float b){
+    public void setRemainingBalance(float b) {
         this.remainingBalance = b;
     }
 
@@ -143,7 +149,7 @@ public class BudgetCycle {
      *
      * @return safe daily limit
      */
-    public float getSafeDailyLimit(){
+    public float getSafeDailyLimit() {
         return safeDailyLimit;
     }
 
@@ -152,7 +158,7 @@ public class BudgetCycle {
      *
      * @param l safe daily limit
      */
-    public void setSafeDailyLimit(float l){
+    public void setSafeDailyLimit(float l) {
         this.safeDailyLimit = l;
     }
 
@@ -161,7 +167,7 @@ public class BudgetCycle {
      *
      * @return remaining days
      */
-    public int getRemainingDays(){
+    public int getRemainingDays() {
         return remainingDays;
     }
 
@@ -170,7 +176,9 @@ public class BudgetCycle {
      *
      * @return remaining daily limit
      */
-    public float getRemainingDailyLimit() { return remainingDailyLimit; }
+    public float getRemainingDailyLimit() {
+        return remainingDailyLimit;
+    }
 
     /**
      * Sets the remaining daily limit for today.
@@ -186,7 +194,7 @@ public class BudgetCycle {
      *
      * @return {@code true} if active
      */
-    public boolean isActive(){
+    public boolean isActive() {
         return isActive;
     }
 
@@ -195,7 +203,7 @@ public class BudgetCycle {
      *
      * @param a active flag
      */
-    public void setActive(boolean a){
+    public void setActive(boolean a) {
         this.isActive = a;
     }
 
@@ -204,7 +212,7 @@ public class BudgetCycle {
      *
      * @return total base amount
      */
-    public float getTotalBase(){
+    public float getTotalBase() {
         return totalBase;
     }
 }
