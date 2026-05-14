@@ -8,6 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ComboBox;
 import javafx.scene.control.Label;
 import javafx.scene.control.TextField;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -51,46 +52,46 @@ public class ExpenseScene {
         VBox root = new VBox(20);
         root.setPadding(new Insets(40));
         root.setAlignment(Pos.TOP_CENTER);
-        root.setStyle("-fx-background-color: #0D0D0D;");
+        root.setStyle("-fx-background-color: " + UiTheme.BG + ";");
         HBox header = new HBox(12);
         header.setAlignment(Pos.CENTER_LEFT);
         Button backBtn = new Button("← Back");
-        backBtn.setStyle("""
+        backBtn.setStyle(String.format("""
                 -fx-background-color: transparent;
-                -fx-text-fill: #C9A84C;
+                -fx-text-fill: %s;
                 -fx-cursor: hand;
                 -fx-font-size: 13px;
-                """);
+                """, UiTheme.ACCENT));
         backBtn.setOnAction(e -> new DashboardScene(stage, cycle).show());
 
         Label title = new Label("Log Expense");
         title.setFont(Font.font("Segoe UI", 24));
-        title.setTextFill(Color.web("#EEEEEE"));
+        title.setTextFill(Color.web(UiTheme.TEXT));
         header.getChildren().addAll(backBtn, title);
         Label hintLbl = new Label(
                 String.format("Available: %.2f EGP", cycle.getRemainingBalance()));
         hintLbl.setFont(Font.font("Segoe UI", 13));
-        hintLbl.setTextFill(Color.web("#4CAF50"));
+        hintLbl.setTextFill(Color.web(UiTheme.SUCCESS));
         VBox card = new VBox(16);
         card.setPadding(new Insets(28));
         card.setMaxWidth(440);
-        card.setStyle("""
-                -fx-background-color: #1A1A1A;
+        card.setStyle(String.format("""
+                -fx-background-color: %s;
                 -fx-background-radius: 12;
-                -fx-border-color: #2A2A2A;
+                -fx-border-color: %s;
                 -fx-border-radius: 12;
                 -fx-border-width: 1;
-                """);
+                """, UiTheme.SURFACE, UiTheme.BORDER));
         Label amountLbl = fieldLabel("Amount (EGP)");
         TextField amountField = inputField("e.g. 50");
         Label catLbl = fieldLabel("Category");
         ComboBox<Category> catBox = new ComboBox<>();
         catBox.setPrefHeight(40);
         catBox.setPrefWidth(384);
-        catBox.setStyle("""
-                -fx-background-color: #252525;
+        catBox.setStyle(String.format("""
+                -fx-background-color: %s;
                 -fx-background-radius: 6;
-                """);
+                """, UiTheme.SURFACE_2));
         List<Category> categories = controller.getCategories();
         catBox.getItems().addAll(categories);
         if (!categories.isEmpty())
@@ -98,20 +99,20 @@ public class ExpenseScene {
         Label noteLbl = fieldLabel("Note (optional)");
         TextField noteField = inputField("e.g. lunch");
         Label errorLbl = new Label("");
-        errorLbl.setTextFill(Color.web("#E05555"));
+        errorLbl.setTextFill(Color.web(UiTheme.DANGER));
         errorLbl.setFont(Font.font("Segoe UI", 12));
         errorLbl.setWrapText(true);
         Button saveBtn = new Button("Save Expense");
         saveBtn.setPrefWidth(384);
         saveBtn.setPrefHeight(44);
         saveBtn.setFont(Font.font("Segoe UI", 14));
-        saveBtn.setStyle("""
-                -fx-background-color: #C9A84C;
-                -fx-text-fill: #0D0D0D;
+        saveBtn.setStyle(String.format("""
+                -fx-background-color: %s;
+                -fx-text-fill: %s;
                 -fx-background-radius: 8;
                 -fx-font-weight: bold;
                 -fx-cursor: hand;
-                """);
+                """, UiTheme.ACCENT, UiTheme.BG));
 
         saveBtn.setOnAction(e -> {
             errorLbl.setText("");
@@ -161,7 +162,12 @@ public class ExpenseScene {
                 errorLbl, saveBtn);
 
         root.getChildren().addAll(header, hintLbl, card);
-        App.setContent(root);
+
+        BorderPane shell = new BorderPane();
+        shell.setStyle("-fx-background-color: " + UiTheme.BG + ";");
+        shell.setLeft(Sidebar.build(stage, cycle, "expense"));
+        shell.setCenter(root);
+        App.setContent(shell);
     }
 
     /**
@@ -173,7 +179,7 @@ public class ExpenseScene {
     private Label fieldLabel(String text) {
         Label l = new Label(text);
         l.setFont(Font.font("Segoe UI", 13));
-        l.setTextFill(Color.web("#AAAAAA"));
+        l.setTextFill(Color.web(UiTheme.TEXT_MUTED));
         return l;
     }
 
@@ -187,15 +193,15 @@ public class ExpenseScene {
         TextField tf = new TextField();
         tf.setPromptText(prompt);
         tf.setPrefHeight(40);
-        tf.setStyle("""
-                -fx-background-color: #252525;
-                -fx-text-fill: #EEEEEE;
-                -fx-prompt-text-fill: #555555;
+        tf.setStyle(String.format("""
+                -fx-background-color: %s;
+                -fx-text-fill: %s;
+                -fx-prompt-text-fill: %s;
                 -fx-background-radius: 6;
-                -fx-border-color: #333333;
+                -fx-border-color: %s;
                 -fx-border-radius: 6;
                 -fx-padding: 8 12;
-                """);
+                """, UiTheme.SURFACE_2, UiTheme.TEXT, UiTheme.TEXT_DIM, UiTheme.BORDER));
         return tf;
     }
 }

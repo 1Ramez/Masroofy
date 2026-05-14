@@ -6,6 +6,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.control.Label;
 import javafx.scene.control.Separator;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -13,6 +14,7 @@ import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import masroofy.App;
 import masroofy.controller.CycleController;
+import masroofy.controller.ThemeController;
 import masroofy.data.DAOLayer;
 import masroofy.model.BudgetCycle;
 
@@ -46,21 +48,21 @@ public class SettingsScene {
     public void show() {
         VBox root = new VBox(20);
         root.setPadding(new Insets(32));
-        root.setStyle("-fx-background-color: #0D0D0D;");
+        root.setStyle("-fx-background-color: " + UiTheme.BG + ";");
         HBox header = new HBox(12);
         header.setAlignment(Pos.CENTER_LEFT);
         Button back = new Button("← Back");
-        back.setStyle("""
+        back.setStyle(String.format("""
                 -fx-background-color: transparent;
-                -fx-text-fill: #C9A84C;
+                -fx-text-fill: %s;
                 -fx-cursor: hand;
                 -fx-font-size: 13px;
-                """);
+                """, UiTheme.ACCENT));
         back.setOnAction(e -> new DashboardScene(stage, cycle).show());
 
         Label title = new Label("Settings");
         title.setFont(Font.font("Segoe UI", 22));
-        title.setTextFill(Color.web("#EEEEEE"));
+        title.setTextFill(Color.web(UiTheme.TEXT));
         header.getChildren().addAll(back, title);
         VBox infoCard = sectionCard("Current Cycle");
         infoCard.getChildren().addAll(
@@ -78,36 +80,67 @@ public class SettingsScene {
         }
         Label savedLbl = new Label("✓  All data saved locally — no internet needed");
         savedLbl.setFont(Font.font("Segoe UI", 13));
-        savedLbl.setTextFill(Color.web("#4CAF50"));
+        savedLbl.setTextFill(Color.web(UiTheme.SUCCESS));
         Label dbLbl = new Label("Database: " + dbPath);
         dbLbl.setFont(Font.font("Segoe UI", 12));
-        dbLbl.setTextFill(Color.web("#666666"));
+        dbLbl.setTextFill(Color.web(UiTheme.TEXT_DIM));
         storageCard.getChildren().addAll(savedLbl, dbLbl);
+
+        VBox appearanceCard = sectionCard("Appearance");
+        ThemeController themeController = new ThemeController();
+        String currentMode = UiTheme.isLight() ? "Light" : "Dark";
+        Label modeLbl = new Label("Theme: " + currentMode);
+        modeLbl.setFont(Font.font("Segoe UI", 13));
+        modeLbl.setTextFill(Color.web(UiTheme.TEXT_MUTED));
+
+        Button toggleTheme = new Button(UiTheme.isLight() ? "Switch to Dark" : "Switch to Light");
+        toggleTheme.setPrefHeight(38);
+        toggleTheme.setStyle(String.format("""
+                -fx-background-color: %s;
+                -fx-text-fill: %s;
+                -fx-background-radius: 8;
+                -fx-border-color: %s;
+                -fx-border-radius: 8;
+                -fx-border-width: 1;
+                -fx-cursor: hand;
+                -fx-padding: 8 16;
+                """, UiTheme.SURFACE_2, UiTheme.TEXT, UiTheme.BORDER));
+        toggleTheme.setOnAction(e -> {
+            themeController.saveAndApply(
+                    UiTheme.isLight() ? ThemeController.Mode.DARK : ThemeController.Mode.LIGHT);
+            new SettingsScene(stage, cycle).show();
+        });
+        appearanceCard.getChildren().addAll(modeLbl, toggleTheme);
         VBox dangerCard = sectionCard("Danger Zone");
         Label dangerInfo = new Label(
                 "Reset current cycle and all its transactions. This cannot be undone.");
         dangerInfo.setFont(Font.font("Segoe UI", 12));
-        dangerInfo.setTextFill(Color.web("#888888"));
+        dangerInfo.setTextFill(Color.web(UiTheme.TEXT_MUTED));
         dangerInfo.setWrapText(true);
 
         Button resetBtn = new Button("Reset Current Cycle");
         resetBtn.setPrefHeight(40);
-        resetBtn.setStyle("""
+        resetBtn.setStyle(String.format("""
                 -fx-background-color: #2A1A1A;
-                -fx-text-fill: #E05555;
+                -fx-text-fill: %s;
                 -fx-background-radius: 8;
-                -fx-border-color: #E05555;
+                -fx-border-color: %s;
                 -fx-border-radius: 8;
                 -fx-border-width: 1;
                 -fx-cursor: hand;
                 -fx-font-size: 13px;
                 -fx-padding: 8 20;
-                """);
+                """, UiTheme.DANGER, UiTheme.DANGER));
         resetBtn.setOnAction(e -> showResetConfirmation());
         dangerCard.getChildren().addAll(dangerInfo, resetBtn);
 
-        root.getChildren().addAll(header, infoCard, storageCard, dangerCard);
-        App.setContent(root);
+        root.getChildren().addAll(header, infoCard, storageCard, appearanceCard, dangerCard);
+
+        BorderPane shell = new BorderPane();
+        shell.setStyle("-fx-background-color: " + UiTheme.BG + ";");
+        shell.setLeft(Sidebar.build(stage, cycle, "settings"));
+        shell.setCenter(root);
+        App.setContent(shell);
     }
 
     /**
@@ -147,20 +180,20 @@ public class SettingsScene {
     private VBox sectionCard(String sectionTitle) {
         VBox card = new VBox(12);
         card.setPadding(new Insets(20));
-        card.setStyle("""
-                -fx-background-color: #1A1A1A;
+        card.setStyle(String.format("""
+                -fx-background-color: %s;
                 -fx-background-radius: 12;
-                -fx-border-color: #2A2A2A;
+                -fx-border-color: %s;
                 -fx-border-radius: 12;
                 -fx-border-width: 1;
-                """);
+                """, UiTheme.SURFACE, UiTheme.BORDER));
 
         Label lbl = new Label(sectionTitle);
         lbl.setFont(Font.font("Segoe UI", 14));
-        lbl.setTextFill(Color.web("#C9A84C"));
+        lbl.setTextFill(Color.web(UiTheme.ACCENT));
 
         Separator sep = new Separator();
-        sep.setStyle("-fx-background-color: #2A2A2A;");
+        sep.setStyle("-fx-background-color: " + UiTheme.BORDER + ";");
 
         card.getChildren().addAll(lbl, sep);
         return card;
@@ -179,12 +212,12 @@ public class SettingsScene {
 
         Label keyLbl = new Label(key);
         keyLbl.setFont(Font.font("Segoe UI", 13));
-        keyLbl.setTextFill(Color.web("#888888"));
+        keyLbl.setTextFill(Color.web(UiTheme.TEXT_MUTED));
         keyLbl.setMinWidth(160);
 
         Label valLbl = new Label(value);
         valLbl.setFont(Font.font("Segoe UI", 13));
-        valLbl.setTextFill(Color.web("#EEEEEE"));
+        valLbl.setTextFill(Color.web(UiTheme.TEXT));
 
         row.getChildren().addAll(keyLbl, valLbl);
         return row;

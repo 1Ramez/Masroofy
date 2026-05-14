@@ -18,6 +18,7 @@ import masroofy.App;
 import masroofy.controller.Clock;
 import masroofy.data.DAOLayer;
 import masroofy.model.BudgetCycle;
+import masroofy.session.UserSession;
 
 /**
  * Dashboard view that displays today's remaining safe spending limit.
@@ -67,19 +68,19 @@ public class DashboardScene {
         cycle.setSafeDailyLimit(dailyLimitToday);
         cycle.setRemainingDailyLimit(dailyLimitToday - spentToday);
 
-        BorderPane root = new BorderPane();
-        root.setStyle("-fx-background-color: #0D0D0D;");
-        root.setTop(buildNavbar());
+        BorderPane shell = new BorderPane();
+        shell.setStyle("-fx-background-color: " + UiTheme.BG + ";");
+        shell.setTop(buildNavbar());
+        shell.setLeft(Sidebar.build(stage, cycle, "dashboard"));
 
         VBox center = new VBox(24);
         center.setPadding(new Insets(40));
         center.setAlignment(Pos.TOP_CENTER);
         center.getChildren().addAll(
                 buildLimitCard(),
-                buildStatsRow(),
-                buildActionButtons());
-        root.setCenter(center);
-        App.setContent(root);
+                buildStatsRow());
+        shell.setCenter(center);
+        App.setContent(shell);
     }
 
     /**
@@ -100,17 +101,17 @@ public class DashboardScene {
         card.setAlignment(Pos.CENTER);
         card.setPadding(new Insets(32));
         card.setMaxWidth(700);
-        card.setStyle("""
-                -fx-background-color: #0a0a0a;
+        card.setStyle(String.format("""
+                -fx-background-color: %s;
                 -fx-background-radius: 16;
-                -fx-border-color: #0d0d0e;
+                -fx-border-color: %s;
                 -fx-border-radius: 16;
                 -fx-border-width: 1;
-                """);
+                """, UiTheme.SURFACE_2, UiTheme.BORDER));
 
         Label titleLbl = new Label("Remaining Safe Limit Today");
         titleLbl.setFont(Font.font("Segoe UI", 13));
-        titleLbl.setTextFill(Color.web("#888888"));
+        titleLbl.setTextFill(Color.web(UiTheme.TEXT_MUTED));
 
         Label limitLbl = new Label(
                 String.format("%.2f EGP", cycle.getRemainingDailyLimit()));
@@ -123,7 +124,7 @@ public class DashboardScene {
                 cycle.getRemainingBalance(),
                 cycle.getRemainingDays()));
         remainLbl.setFont(Font.font("Segoe UI", 13));
-        remainLbl.setTextFill(Color.web("#666666"));
+        remainLbl.setTextFill(Color.web(UiTheme.TEXT_DIM));
         remainLbl.setWrapText(false);
 
         card.getChildren().addAll(titleLbl, limitLbl, remainLbl);
@@ -150,29 +151,6 @@ public class DashboardScene {
     }
 
     /**
-     * Builds the action button row used for navigation.
-     *
-     * @return action buttons container
-     */
-    private HBox buildActionButtons() {
-        HBox box = new HBox(12);
-        box.setAlignment(Pos.CENTER);
-
-        Button logBtn = actionButton("+ Log Expense", "#C9A84C", "#0D0D0D", true);
-        Button historyBtn = actionButton("History", "#1E1E1E", "#CCCCCC", false);
-        Button statsBtn = actionButton("Stats", "#1E1E1E", "#CCCCCC", false);
-        Button settingsBtn = actionButton("Settings", "#1E1E1E", "#CCCCCC", false);
-
-        logBtn.setOnAction(e -> new ExpenseScene(stage, cycle).show());
-        historyBtn.setOnAction(e -> new HistoryScene(stage, cycle).show());
-        statsBtn.setOnAction(e -> new StatsScene(stage, cycle).show());
-        settingsBtn.setOnAction(e -> new SettingsScene(stage, cycle).show());
-
-        box.getChildren().addAll(logBtn, historyBtn, statsBtn, settingsBtn);
-        return box;
-    }
-
-    /**
      * Builds the dashboard navbar.
      *
      * @return navbar node
@@ -181,15 +159,15 @@ public class DashboardScene {
         HBox nav = new HBox();
         nav.setPadding(new Insets(16, 24, 16, 24));
         nav.setAlignment(Pos.CENTER_LEFT);
-        nav.setStyle("""
-                -fx-background-color: #141414;
-                -fx-border-color: #222222;
+        nav.setStyle(String.format("""
+                -fx-background-color: %s;
+                -fx-border-color: %s;
                 -fx-border-width: 0 0 1 0;
-                """);
+                """, UiTheme.BG, UiTheme.BORDER));
 
         Label brand = new Label("Masroofy");
         brand.setFont(Font.font("Segoe UI", 20));
-        brand.setTextFill(Color.web("#C9A84C"));
+        brand.setTextFill(Color.web(UiTheme.ACCENT));
 
         Region spacer = new Region();
         HBox.setHgrow(spacer, Priority.ALWAYS);
@@ -197,9 +175,26 @@ public class DashboardScene {
         Label info = new Label(
                 cycle.getStartDate() + "  →  " + cycle.getEndDate());
         info.setFont(Font.font("Segoe UI", 12));
-        info.setTextFill(Color.web("#555555"));
+        info.setTextFill(Color.web(UiTheme.TEXT_DIM));
 
-        nav.getChildren().addAll(brand, spacer, info);
+        String fullName = UserSession.getCurrentUser() == null ? "User" : UserSession.getCurrentUser().getName();
+        String trimmed = fullName == null ? "" : fullName.trim();
+        String firstName = trimmed.isBlank() ? "User" : trimmed.split("\\s+")[0];
+        Label userLabel = new Label(firstName);
+        userLabel.setFont(Font.font("Segoe UI", 12));
+        userLabel.setTextFill(Color.web(UiTheme.TEXT));
+        userLabel.setStyle(String.format("""
+                -fx-background-color: %s;
+                -fx-border-color: %s;
+                -fx-border-radius: 999;
+                -fx-background-radius: 999;
+                -fx-padding: 6 10;
+                """, UiTheme.SURFACE, UiTheme.BORDER));
+
+        HBox right = new HBox(10, info, userLabel);
+        right.setAlignment(Pos.CENTER_RIGHT);
+
+        nav.getChildren().addAll(brand, spacer, right);
         return nav;
     }
 
@@ -215,44 +210,22 @@ public class DashboardScene {
         VBox c = new VBox(4);
         c.setAlignment(Pos.CENTER);
         c.setPadding(new Insets(14, 20, 14, 20));
-        c.setStyle("""
-                -fx-background-color: #1A1A1A;
+        c.setStyle(String.format("""
+                -fx-background-color: %s;
                 -fx-background-radius: 10;
-                -fx-border-color: #2A2A2A;
+                -fx-border-color: %s;
                 -fx-border-radius: 10;
                 -fx-border-width: 1;
-                """);
+                """, UiTheme.SURFACE, UiTheme.BORDER));
         Label v = new Label(value);
         v.setFont(Font.font("Segoe UI", 18));
         v.setTextFill(Color.web(color));
         Label l = new Label(label);
         l.setFont(Font.font("Segoe UI", 11));
-        l.setTextFill(Color.web("#555555"));
+        l.setTextFill(Color.web(UiTheme.TEXT_DIM));
         c.getChildren().addAll(v, l);
         return c;
     }
 
-    /**
-     * Creates a styled action button.
-     *
-     * @param text button text
-     * @param bg   background color
-     * @param fg   text color
-     * @param bold whether to render the label in bold
-     * @return button instance
-     */
-    private Button actionButton(String text, String bg, String fg, boolean bold) {
-        Button b = new Button(text);
-        b.setPrefHeight(42);
-        b.setPrefWidth(138);
-        b.setFont(Font.font("Segoe UI", 13));
-        b.setStyle(String.format("""
-                -fx-background-color: %s;
-                -fx-text-fill: %s;
-                -fx-background-radius: 8;
-                -fx-cursor: hand;
-                %s
-                """, bg, fg, bold ? "-fx-font-weight: bold;" : ""));
-        return b;
-    }
+    // Navigation buttons moved to Sidebar.
 }

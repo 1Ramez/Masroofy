@@ -13,7 +13,9 @@ import javafx.scene.paint.Color;
 import javafx.scene.text.Font;
 import javafx.stage.Stage;
 import masroofy.App;
+import masroofy.controller.AuthController;
 import masroofy.controller.CycleController;
+import masroofy.controller.ThemeController;
 import masroofy.model.BudgetCycle;
 
 /**
@@ -42,25 +44,39 @@ public class InitScene {
         VBox root = new VBox(24);
         root.setAlignment(Pos.CENTER);
         root.setPadding(new Insets(48));
-        root.setStyle("-fx-background-color: #0D0D0D;");
+        root.setStyle("-fx-background-color: " + UiTheme.BG + ";");
+
+        Button themeBtn = new Button(UiTheme.isLight() ? "Dark mode" : "Light mode");
+        themeBtn.setFont(Font.font("Segoe UI", 12));
+        themeBtn.setStyle(String.format("""
+                -fx-background-color: transparent;
+                -fx-text-fill: %s;
+                -fx-cursor: hand;
+                """, UiTheme.TEXT_MUTED));
+        themeBtn.setOnAction(e -> {
+            ThemeController tc = new ThemeController();
+            tc.saveAndApply(UiTheme.isLight() ? ThemeController.Mode.DARK : ThemeController.Mode.LIGHT);
+            new InitScene(stage).show();
+        });
+
         Label title = new Label("Masroofy");
         title.setFont(Font.font("Segoe UI", 36));
-        title.setTextFill(Color.web("#C9A84C"));
+        title.setTextFill(Color.web(UiTheme.ACCENT));
 
         Label subtitle = new Label("Set up your budget cycle");
         subtitle.setFont(Font.font("Segoe UI", 16));
-        subtitle.setTextFill(Color.web("#888888"));
+        subtitle.setTextFill(Color.web(UiTheme.TEXT_MUTED));
         VBox card = new VBox(16);
         card.setAlignment(Pos.CENTER_LEFT);
         card.setPadding(new Insets(32));
         card.setMaxWidth(440);
-        card.setStyle("""
-                -fx-background-color: #1A1A1A;
+        card.setStyle(String.format("""
+                -fx-background-color: %s;
                 -fx-background-radius: 12;
-                -fx-border-color: #2A2A2A;
+                -fx-border-color: %s;
                 -fx-border-radius: 12;
                 -fx-border-width: 1;
-                """);
+                """, UiTheme.SURFACE, UiTheme.BORDER));
 
         Label amountLbl = fieldLabel("Total Budget (EGP)");
         TextField amountField = inputField("e.g. 3000");
@@ -74,7 +90,7 @@ public class InitScene {
         endPicker.setValue(LocalDate.now().plusDays(30));
 
         Label errorLbl = new Label("");
-        errorLbl.setTextFill(Color.web("#E05555"));
+        errorLbl.setTextFill(Color.web(UiTheme.DANGER));
         errorLbl.setFont(Font.font("Segoe UI", 12));
         errorLbl.setWrapText(true);
 
@@ -82,13 +98,13 @@ public class InitScene {
         btn.setPrefWidth(376);
         btn.setPrefHeight(44);
         btn.setFont(Font.font("Segoe UI", 14));
-        btn.setStyle("""
-                -fx-background-color: #C9A84C;
-                -fx-text-fill: #0D0D0D;
+        btn.setStyle(String.format("""
+                -fx-background-color: %s;
+                -fx-text-fill: %s;
                 -fx-background-radius: 8;
                 -fx-font-weight: bold;
                 -fx-cursor: hand;
-                """);
+                """, UiTheme.ACCENT, UiTheme.BG));
         btn.setOnAction(e -> {
             errorLbl.setText("");
             try {
@@ -114,7 +130,20 @@ public class InitScene {
                 endLbl, endPicker,
                 errorLbl, btn);
 
-        root.getChildren().addAll(title, subtitle, card);
+        Button switchAccount = new Button("Switch account");
+        switchAccount.setFont(Font.font("Segoe UI", 12));
+        switchAccount.setStyle(String.format("""
+                -fx-background-color: transparent;
+                -fx-text-fill: %s;
+                -fx-cursor: hand;
+                """, UiTheme.ACCENT));
+        switchAccount.setOnAction(e -> {
+            new AuthController().signOut();
+            DashboardScene.resetSession();
+            new AuthScene(stage).show();
+        });
+
+        root.getChildren().addAll(themeBtn, title, subtitle, card, switchAccount);
         App.setContent(root);
     }
 
@@ -127,7 +156,7 @@ public class InitScene {
     private Label fieldLabel(String text) {
         Label l = new Label(text);
         l.setFont(Font.font("Segoe UI", 13));
-        l.setTextFill(Color.web("#AAAAAA"));
+        l.setTextFill(Color.web(UiTheme.TEXT_MUTED));
         return l;
     }
 
@@ -141,15 +170,15 @@ public class InitScene {
         TextField tf = new TextField();
         tf.setPromptText(prompt);
         tf.setPrefHeight(40);
-        tf.setStyle("""
-                -fx-background-color: #252525;
-                -fx-text-fill: #EEEEEE;
-                -fx-prompt-text-fill: #555555;
+        tf.setStyle(String.format("""
+                -fx-background-color: %s;
+                -fx-text-fill: %s;
+                -fx-prompt-text-fill: %s;
                 -fx-background-radius: 6;
-                -fx-border-color: #333333;
+                -fx-border-color: %s;
                 -fx-border-radius: 6;
                 -fx-padding: 8 12;
-                """);
+                """, UiTheme.SURFACE_2, UiTheme.TEXT, UiTheme.TEXT_DIM, UiTheme.BORDER));
         return tf;
     }
 
@@ -162,12 +191,12 @@ public class InitScene {
         DatePicker dp = new DatePicker();
         dp.setPrefHeight(40);
         dp.setPrefWidth(376);
-        dp.setStyle("-fx-background-color: #252525; -fx-background-radius: 6;");
-        dp.getEditor().setStyle("""
-                -fx-background-color: #252525;
-                -fx-text-fill: #EEEEEE;
+        dp.setStyle(String.format("-fx-background-color: %s; -fx-background-radius: 6;", UiTheme.SURFACE_2));
+        dp.getEditor().setStyle(String.format("""
+                -fx-background-color: %s;
+                -fx-text-fill: %s;
                 -fx-font-size: 13px;
-                """);
+                """, UiTheme.SURFACE_2, UiTheme.TEXT));
         return dp;
     }
 }

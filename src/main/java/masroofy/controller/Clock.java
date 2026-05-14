@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import masroofy.data.DAOLayer;
 import masroofy.model.BudgetCycle;
+import masroofy.session.UserSession;
 
 /**
  * Performs the daily rollover check for the active budget cycle.
@@ -34,7 +35,11 @@ public class Clock {
      *         exists or rollover has already been applied for today
      */
     public RolloverResult performCheck() {
-        BudgetCycle cycle = daoLayer.findActiveCycle();
+        int userId = UserSession.getCurrentUserId();
+        if (userId <= 0)
+            return null;
+
+        BudgetCycle cycle = daoLayer.findActiveCycleForUser(userId);
         if (cycle == null)
             return null;
 

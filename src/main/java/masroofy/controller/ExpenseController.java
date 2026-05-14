@@ -7,6 +7,7 @@ import masroofy.data.DAOLayer;
 import masroofy.model.BudgetCycle;
 import masroofy.model.Category;
 import masroofy.model.Expense;
+import masroofy.session.UserSession;
 
 /**
  * Controller for expense logging and dashboard refresh calculations.
@@ -37,7 +38,13 @@ public class ExpenseController {
             return null;
         }
 
-        BudgetCycle cycle = daoLayer.findActiveCycle();
+        int userId = UserSession.getCurrentUserId();
+        if (userId <= 0) {
+            validationError = "Please log in first.";
+            return null;
+        }
+
+        BudgetCycle cycle = daoLayer.findActiveCycleForUser(userId);
         if (cycle == null) {
             validationError = "No active budget cycle found.";
             return null;
@@ -75,7 +82,11 @@ public class ExpenseController {
      * @return refreshed cycle, or {@code null} if no active cycle exists
      */
     public BudgetCycle refreshDashboard() {
-        BudgetCycle cycle = daoLayer.findActiveCycle();
+        int userId = UserSession.getCurrentUserId();
+        if (userId <= 0)
+            return null;
+
+        BudgetCycle cycle = daoLayer.findActiveCycleForUser(userId);
         if (cycle == null)
             return null;
 

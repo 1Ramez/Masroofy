@@ -2,6 +2,7 @@ package masroofy.data;
 
 import java.sql.Connection;
 import java.sql.DriverManager;
+import java.sql.ResultSet;
 import java.sql.SQLException;
 import java.sql.Statement;
 
@@ -76,6 +77,7 @@ public class Database {
         s.execute("""
                 CREATE TABLE IF NOT EXISTS Cycles (
                     budgetCycleId    INTEGER PRIMARY KEY AUTOINCREMENT,
+                    userId           INTEGER,
                     totalAmount      REAL    NOT NULL,
                     startDate        TEXT    NOT NULL,
                     endDate          TEXT    NOT NULL,
@@ -142,7 +144,72 @@ public class Database {
                 VALUES (1,'Food',1),(2,'Transport',1),(3,'Entertainment',1),(4,'Other',1)
                 """);
 
+        ensureColumnExists("Cycles", "userId", "INTEGER");
+
+        s.execute("CREATE INDEX IF NOT EXISTS idx_cycles_user_active ON Cycles(userId, isActive)");
+        s.execute("CREATE UNIQUE INDEX IF NOT EXISTS idx_users_name_unique ON Users(name)");
+
+        migrateLegacyCycleOwnership();
+
         s.close();
         System.out.println("[Database] Tables ready.");
+    }
+
+    private void ensureColumnExists(String table, String column, String definition) throws SQLException {
+        if (hasColumn(table, column))
+            return;
+        try (Statement s = connection.createStatement()) {
+            s.execute("ALTER TABLE " + table + " ADD COLUMN " + column + " " + definition);
+        }
+    }
+
+    private boolean hasColumn(String table, String column) throws SQLException {
+        try (Statement s = connection.createStatement();
+                ResultSet rs = s.executeQuery("PRAGMA table_info(" + table + ")")) {
+            while (rs.next()) {
+                String name = rs.getString("name");
+                if (column.equalsIgnoreCase(name))
+                    return true;
+            }
+            return false;
+        }
+    }
+
+    /**
+     * Best-effort migration for older databases that predate multi-user support.
+     *
+     * <p>
+     * If cycles exist with {@code userId} unset and there is exactly one user,
+     * assigns all legacy cycles to that user to preserve existing progress.
+     * </p>
+     */
+    private void migrateLegacyCycleOwnership() {
+        try (Statement s = connection.createStatement()) {
+            int cyclesWithUser = scalarInt(s, "SELECT COUNT(*) FROM Cycles WHERE userId IS NOT NULL");
+            if (cyclesWithUser > 0)
+                return;
+
+            int userCount = scalarInt(s, "SELECT COUNT(*) FROM Users");
+            if (userCount != 1)
+                return;
+
+            int userId = scalarInt(s, "SELECT id FROM Users WHERE selected=1 LIMIT 1");
+            if (userId <= 0)
+                userId = scalarInt(s, "SELECT id FROM Users LIMIT 1");
+            if (userId <= 0)
+                return;
+
+            s.executeUpdate("UPDATE Cycles SET userId=" + userId + " WHERE userId IS NULL");
+        } catch (SQLException e) {
+            System.err.println("[Database] migrateLegacyCycleOwnership: " + e.getMessage());
+        }
+    }
+
+    private int scalarInt(Statement s, String sql) throws SQLException {
+        try (ResultSet rs = s.executeQuery(sql)) {
+            if (rs.next())
+                return rs.getInt(1);
+            return 0;
+        }
     }
 }

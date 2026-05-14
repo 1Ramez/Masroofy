@@ -13,6 +13,7 @@ import java.util.List;
 import masroofy.model.BudgetCycle;
 import masroofy.model.Category;
 import masroofy.model.Expense;
+import masroofy.model.Student;
 
 /**
  * Provides database CRUD operations for Masroofy's SQLite schema.
@@ -50,20 +51,22 @@ public class DAOLayer {
      * Inserts a new budget cycle and returns its generated database id.
      *
      * @param cycle the cycle to insert
+     * @param userId the owning user id
      * @return the generated id, or {@code -1} on failure
      */
-    public int insertCycle(BudgetCycle cycle) {
+    public int insertCycle(BudgetCycle cycle, int userId) {
         String sql = """
                 INSERT INTO Cycles
-                    (totalAmount, startDate, endDate, remainingBalance, safeDailyLimit, isActive)
-                VALUES (?, ?, ?, ?, ?, 1)
+                    (userId, totalAmount, startDate, endDate, remainingBalance, safeDailyLimit, isActive)
+                VALUES (?, ?, ?, ?, ?, ?, 1)
                 """;
         try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
-            stmt.setFloat(1, cycle.getTotalAmount());
-            stmt.setString(2, cycle.getStartDate().toString());
-            stmt.setString(3, cycle.getEndDate().toString());
-            stmt.setFloat(4, cycle.getRemainingBalance());
-            stmt.setFloat(5, cycle.getSafeDailyLimit());
+            stmt.setInt(1, userId);
+            stmt.setFloat(2, cycle.getTotalAmount());
+            stmt.setString(3, cycle.getStartDate().toString());
+            stmt.setString(4, cycle.getEndDate().toString());
+            stmt.setFloat(5, cycle.getRemainingBalance());
+            stmt.setFloat(6, cycle.getSafeDailyLimit());
             stmt.executeUpdate();
             ResultSet keys = stmt.getGeneratedKeys();
             if (keys.next()) {
@@ -80,18 +83,164 @@ public class DAOLayer {
     /**
      * Returns the currently active cycle, if any.
      *
+     * @param userId owning user id
      * @return the active {@link BudgetCycle}, or {@code null} when none exists
      */
-    public BudgetCycle findActiveCycle() {
-        String sql = "SELECT * FROM Cycles WHERE isActive = 1 LIMIT 1";
+    public BudgetCycle findActiveCycleForUser(int userId) {
+        String sql = "SELECT * FROM Cycles WHERE isActive = 1 AND userId = ? LIMIT 1";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            try (ResultSet rs = stmt.executeQuery()) {
+                if (rs.next())
+                    return mapCycle(rs);
+            }
+        } catch (SQLException e) {
+            System.err.println("[DAOLayer] findActiveCycleForUser: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Marks all cycles as inactive for the given user.
+     *
+     * @param userId owning user id
+     */
+    public void deactivateCyclesForUser(int userId) {
+        String sql = "UPDATE Cycles SET isActive = 0 WHERE userId = ?";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setInt(1, userId);
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("[DAOLayer] deactivateCyclesForUser: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Inserts a new user record.
+     *
+     * @param name user name (unique)
+     * @param pin stored pin (hashed or plain)
+     * @return generated user id, or {@code -1} on failure/duplicate
+     */
+    public int insertUser(String name, String pin) {
+        if (name == null || name.isBlank())
+            return -1;
+        String existsSql = "SELECT id FROM Users WHERE name = ? LIMIT 1";
+        try (PreparedStatement existsStmt = connection.prepareStatement(existsSql)) {
+            existsStmt.setString(1, name.trim());
+            try (ResultSet rs = existsStmt.executeQuery()) {
+                if (rs.next())
+                    return -1;
+            }
+        } catch (SQLException e) {
+            System.err.println("[DAOLayer] insertUser(exists): " + e.getMessage());
+            return -1;
+        }
+
+        String sql = "INSERT INTO Users (name, pin, selected) VALUES (?, ?, 0)";
+        try (PreparedStatement stmt = connection.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS)) {
+            stmt.setString(1, name.trim());
+            stmt.setString(2, pin);
+            stmt.executeUpdate();
+            ResultSet keys = stmt.getGeneratedKeys();
+            if (keys.next()) {
+                return keys.getInt(1);
+            }
+        } catch (SQLException e) {
+            System.err.println("[DAOLayer] insertUser: " + e.getMessage());
+        }
+        return -1;
+    }
+
+    /**
+     * Returns the user by name, or {@code null} if no match exists.
+     *
+     * @param name user name
+     * @return matching user, or {@code null}
+     */
+    public Student findUserByName(String name) {
+        String sql = "SELECT * FROM Users WHERE name = ? LIMIT 1";
+        try (PreparedStatement stmt = connection.prepareStatement(sql)) {
+            stmt.setString(1, name);
+            ResultSet rs = stmt.executeQuery();
+            if (rs.next())
+                return mapStudent(rs);
+        } catch (SQLException e) {
+            System.err.println("[DAOLayer] findUserByName: " + e.getMessage());
+        }
+        return null;
+    }
+
+    /**
+     * Returns the currently selected (last logged-in) user.
+     *
+     * @return selected user, or {@code null} when none selected
+     */
+    public Student getSelectedUser() {
+        String sql = "SELECT * FROM Users WHERE selected = 1 LIMIT 1";
         try (PreparedStatement stmt = connection.prepareStatement(sql);
                 ResultSet rs = stmt.executeQuery()) {
             if (rs.next())
-                return mapCycle(rs);
+                return mapStudent(rs);
         } catch (SQLException e) {
-            System.err.println("[DAOLayer] findActiveCycle: " + e.getMessage());
+            System.err.println("[DAOLayer] getSelectedUser: " + e.getMessage());
         }
         return null;
+    }
+
+    /**
+     * Marks the given user id as selected and clears selection for all others.
+     *
+     * @param userId user id to select
+     */
+    public void selectUser(int userId) {
+        try (PreparedStatement clear = connection.prepareStatement("UPDATE Users SET selected = 0");
+                PreparedStatement set = connection.prepareStatement("UPDATE Users SET selected = 1 WHERE id = ?")) {
+            clear.executeUpdate();
+            set.setInt(1, userId);
+            set.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("[DAOLayer] selectUser: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Clears the selected user flag from all rows.
+     */
+    public void clearSelectedUser() {
+        try (PreparedStatement stmt = connection.prepareStatement("UPDATE Users SET selected = 0")) {
+            stmt.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("[DAOLayer] clearSelectedUser: " + e.getMessage());
+        }
+    }
+
+    /**
+     * Claims legacy cycles (created before multi-user support) for the given user.
+     *
+     * <p>
+     * This is a best-effort migration: if any cycle already has a non-null
+     * {@code userId}, this method does nothing.
+     * </p>
+     *
+     * @param userId user id to assign legacy cycles to
+     */
+    public void claimLegacyCyclesForUser(int userId) {
+        if (userId <= 0)
+            return;
+        try (PreparedStatement count = connection
+                .prepareStatement("SELECT COUNT(*) FROM Cycles WHERE userId IS NOT NULL");
+                PreparedStatement update = connection
+                        .prepareStatement("UPDATE Cycles SET userId = ? WHERE userId IS NULL")) {
+            try (ResultSet rs = count.executeQuery()) {
+                if (rs.next() && rs.getInt(1) > 0)
+                    return;
+            }
+            update.setInt(1, userId);
+            update.executeUpdate();
+        } catch (SQLException e) {
+            System.err.println("[DAOLayer] claimLegacyCyclesForUser: " + e.getMessage());
+        }
     }
 
     /**
@@ -540,5 +689,12 @@ public class DAOLayer {
         e.setExpenseId(rs.getInt("expenseId"));
         e.setDate(LocalDate.parse(rs.getString("date")));
         return e;
+    }
+
+    private Student mapStudent(ResultSet rs) throws SQLException {
+        Student u = new Student(rs.getString("name"), rs.getString("pin"));
+        u.setId(rs.getInt("id"));
+        u.setSelected(rs.getBoolean("selected"));
+        return u;
     }
 }

@@ -4,10 +4,11 @@ import javafx.application.Application;
 import javafx.scene.Scene;
 import javafx.scene.layout.StackPane;
 import javafx.stage.Stage;
-import masroofy.controller.CycleController;
-import masroofy.model.BudgetCycle;
-import masroofy.view.DashboardScene;
-import masroofy.view.InitScene;
+import masroofy.controller.AuthController;
+import masroofy.controller.ThemeController;
+import masroofy.session.UserSession;
+import masroofy.view.AuthScene;
+import masroofy.view.UiTheme;
 
 /**
  * JavaFX application entry point for Masroofy.
@@ -32,7 +33,9 @@ public class App extends Application {
     public void start(Stage stage) {
         primaryStage = stage;
         sceneRoot = new StackPane();
-        sceneRoot.setStyle("-fx-background-color: #0D0D0D;");
+
+        new ThemeController().applySavedTheme();
+        sceneRoot.setStyle("-fx-background-color: " + UiTheme.BG + ";");
 
         Scene scene = new Scene(sceneRoot, 900, 680);
         stage.setScene(scene);
@@ -41,14 +44,10 @@ public class App extends Application {
         stage.setMinHeight(600);
         stage.show();
 
-        CycleController cc = new CycleController();
-        BudgetCycle active = cc.checkActiveCycle();
-
-        if (active == null) {
-            new InitScene(stage).show();
-        } else {
-            new DashboardScene(stage, active).show();
-        }
+        // Always require login on app open.
+        new AuthController().signOut();
+        UserSession.clear();
+        new AuthScene(stage).show();
     }
 
     /**
@@ -57,6 +56,9 @@ public class App extends Application {
      * @param content the node to display
      */
     public static void setContent(javafx.scene.Node content) {
+        if (sceneRoot != null) {
+            sceneRoot.setStyle("-fx-background-color: " + UiTheme.BG + ";");
+        }
         sceneRoot.getChildren().setAll(content);
     }
 

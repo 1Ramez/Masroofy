@@ -8,6 +8,7 @@ import javafx.scene.control.Button;
 import javafx.scene.control.Label;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
+import javafx.scene.layout.BorderPane;
 import javafx.scene.layout.HBox;
 import javafx.scene.layout.VBox;
 import javafx.scene.paint.Color;
@@ -46,20 +47,20 @@ public class StatsScene {
         VBox root = new VBox(24);
         root.setPadding(new Insets(32));
         root.setAlignment(Pos.TOP_CENTER);
-        root.setStyle("-fx-background-color: #0D0D0D;");
+        root.setStyle("-fx-background-color: " + UiTheme.BG + ";");
         HBox header = new HBox(12);
         header.setAlignment(Pos.CENTER_LEFT);
         Button back = new Button("← Back");
-        back.setStyle("""
+        back.setStyle(String.format("""
                 -fx-background-color: transparent;
-                -fx-text-fill: #C9A84C;
+                -fx-text-fill: %s;
                 -fx-cursor: hand;
                 -fx-font-size: 13px;
-                """);
+                """, UiTheme.ACCENT));
         back.setOnAction(e -> new DashboardScene(stage, cycle).show());
         Label title = new Label("Spending Stats");
         title.setFont(Font.font("Segoe UI", 22));
-        title.setTextFill(Color.web("#EEEEEE"));
+        title.setTextFill(Color.web(UiTheme.TEXT));
         header.getChildren().addAll(back, title);
         header.setMaxWidth(Double.MAX_VALUE);
         HBox summary = new HBox(12);
@@ -77,20 +78,20 @@ public class StatsScene {
         chartCard.setAlignment(Pos.CENTER);
         chartCard.setPadding(new Insets(24));
         chartCard.setMaxWidth(560);
-        chartCard.setStyle("""
-                -fx-background-color: #1A1A1A;
+        chartCard.setStyle(String.format("""
+                -fx-background-color: %s;
                 -fx-background-radius: 12;
-                -fx-border-color: #2A2A2A;
+                -fx-border-color: %s;
                 -fx-border-radius: 12;
                 -fx-border-width: 1;
-                """);
+                """, UiTheme.SURFACE, UiTheme.BORDER));
 
         Label chartTitle = new Label("Spending by Category");
         chartTitle.setFont(Font.font("Segoe UI", 15));
-        chartTitle.setTextFill(Color.web("#AAAAAA"));
+        chartTitle.setTextFill(Color.web(UiTheme.TEXT_MUTED));
         Label loadingLbl = new Label("Generating chart...");
         loadingLbl.setFont(Font.font("Segoe UI", 13));
-        loadingLbl.setTextFill(Color.web("#555555"));
+        loadingLbl.setTextFill(Color.web(UiTheme.TEXT_DIM));
         chartCard.getChildren().addAll(chartTitle, loadingLbl);
         String chartPath = chartGenerator.generatePieChart(cycle.getBudgetCycleId());
 
@@ -99,7 +100,7 @@ public class StatsScene {
         if (chartPath == null) {
             Label noData = new Label("No data available. Log an expense to see your insights.");
             noData.setFont(Font.font("Segoe UI", 13));
-            noData.setTextFill(Color.web("#555555"));
+            noData.setTextFill(Color.web(UiTheme.TEXT_DIM));
             noData.setWrapText(true);
             chartCard.getChildren().add(noData);
         } else {
@@ -119,21 +120,26 @@ public class StatsScene {
             }
         }
         Button refreshBtn = new Button("↻  Refresh Chart");
-        refreshBtn.setStyle("""
+        refreshBtn.setStyle(String.format("""
                 -fx-background-color: transparent;
-                -fx-text-fill: #C9A84C;
-                -fx-border-color: #C9A84C;
+                -fx-text-fill: %s;
+                -fx-border-color: %s;
                 -fx-border-radius: 8;
                 -fx-border-width: 1;
                 -fx-background-radius: 8;
                 -fx-cursor: hand;
                 -fx-font-size: 13px;
                 -fx-padding: 8 20;
-                """);
+                """, UiTheme.ACCENT, UiTheme.ACCENT));
         refreshBtn.setOnAction(e -> new StatsScene(stage, cycle).show());
 
         root.getChildren().addAll(header, summary, chartCard, refreshBtn);
-        App.setContent(root);
+
+        BorderPane shell = new BorderPane();
+        shell.setStyle("-fx-background-color: " + UiTheme.BG + ";");
+        shell.setLeft(Sidebar.build(stage, cycle, "stats"));
+        shell.setCenter(root);
+        App.setContent(shell);
     }
 
     /**
@@ -148,19 +154,19 @@ public class StatsScene {
         VBox c = new VBox(6);
         c.setAlignment(Pos.CENTER);
         c.setPadding(new Insets(16, 22, 16, 22));
-        c.setStyle("""
-                -fx-background-color: #1A1A1A;
+        c.setStyle(String.format("""
+                -fx-background-color: %s;
                 -fx-background-radius: 10;
-                -fx-border-color: #2A2A2A;
+                -fx-border-color: %s;
                 -fx-border-radius: 10;
                 -fx-border-width: 1;
-                """);
+                """, UiTheme.SURFACE, UiTheme.BORDER));
         Label v = new Label(value);
         v.setFont(Font.font("Segoe UI", 18));
         v.setTextFill(Color.web(color));
         Label l = new Label(label);
         l.setFont(Font.font("Segoe UI", 11));
-        l.setTextFill(Color.web("#555555"));
+        l.setTextFill(Color.web(UiTheme.TEXT_DIM));
         c.getChildren().addAll(v, l);
         return c;
     }

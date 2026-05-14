@@ -4,6 +4,7 @@ import java.time.LocalDate;
 
 import masroofy.data.DAOLayer;
 import masroofy.model.BudgetCycle;
+import masroofy.session.UserSession;
 
 /**
  * Controller responsible for creating and managing budget cycles.
@@ -30,13 +31,20 @@ public class CycleController {
      *         fails
      */
     public BudgetCycle createCycle(float amount, LocalDate startDate, LocalDate endDate) {
+        int userId = UserSession.getCurrentUserId();
+        if (userId <= 0) {
+            validationError = "Please log in first.";
+            return null;
+        }
+
         if (!validateInput(amount, startDate, endDate))
             return null;
 
         BudgetCycle cycle = new BudgetCycle(amount, startDate, endDate);
         cycle.calculateWeeklyLimit();
 
-        int cycleId = daoLayer.insertCycle(cycle);
+        daoLayer.deactivateCyclesForUser(userId);
+        int cycleId = daoLayer.insertCycle(cycle, userId);
         if (cycleId <= 0) {
             validationError = "Could not save budget cycle.";
             return null;
@@ -52,7 +60,10 @@ public class CycleController {
      * @return active cycle, or {@code null}
      */
     public BudgetCycle checkActiveCycle() {
-        return daoLayer.findActiveCycle();
+        int userId = UserSession.getCurrentUserId();
+        if (userId <= 0)
+            return null;
+        return daoLayer.findActiveCycleForUser(userId);
     }
 
     /**
